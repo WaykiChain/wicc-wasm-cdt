@@ -1,6 +1,4 @@
 #include <wasm.hpp>
-#include <asset.hpp>
-#include <string>
 using namespace wasm;
 using namespace std;
 
