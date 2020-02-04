@@ -39,6 +39,6 @@ $ cd build
 $ cmake ..
 $ make
 ```
-This will generate two files:
+This will generate two files (./examples/hello/build/hello):
 * The compiled binary wasm (hello.wasm)
 * The generated ABI file (hello.abi)

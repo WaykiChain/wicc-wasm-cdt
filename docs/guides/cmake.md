@@ -1,7 +1,5 @@
-# CMake
-
 ## CMake Configuration
-The template `CMakeLists.txt` in the examples folder is a good boilerplate for manual usage.
+The template `CMakeLists.txt` in the examples/hello folder is a good boilerplate for manual usage.
 
 For example:
 
@@ -26,6 +24,17 @@ ExternalProject_Add(
 )
 ```
 
+In `src/CMakeLists.txt`:
+```
+project(hello)
+
+set(WASM_WASM_OLD_BEHAVIOR "Off")
+find_package(wasm.cdt)
+
+add_contract( hello hello hello.cpp )
+target_include_directories( hello PUBLIC ${CMAKE_SOURCE_DIR}/../include )
+target_ricardian_directory( hello ${CMAKE_SOURCE_DIR}/../ricardian )
+```
 
 In `hello.hpp`:
 
