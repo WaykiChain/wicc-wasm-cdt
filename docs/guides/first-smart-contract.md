@@ -31,9 +31,8 @@ WASM_DISPATCH( hello, (hi))
 ```
 
 - Navigate to the hello folder in examples (./examples/hello).
-
-```
 - With CMake
+
 ```sh
 $ mkdir build
 $ cd build
