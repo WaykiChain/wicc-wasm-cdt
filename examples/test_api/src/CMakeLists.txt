@@ -1,6 +1,6 @@
 project(test_api)
+cmake_minimum_required(VERSION 3.5)
 
-set(WASM_WASM_OLD_BEHAVIOR "Off")
 find_package(wasm.cdt)
 
 add_contract( test_api test_api test_api.cpp test_print.cpp test_types.cpp test_datastream.cpp test_action.cpp)

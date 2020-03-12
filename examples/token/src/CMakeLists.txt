@@ -1,6 +1,6 @@
 project(token)
+cmake_minimum_required(VERSION 3.5)
 
-set(WASM_WASM_OLD_BEHAVIOR "Off")
 find_package(wasm.cdt)
 
 add_contract( token token token.cpp )

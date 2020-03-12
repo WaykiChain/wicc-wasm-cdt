@@ -1,4 +1,5 @@
 project(prints)
+cmake_minimum_required(VERSION 3.5)
 
 set(WASM_WASM_OLD_BEHAVIOR "Off")
 find_package(wasm.cdt)

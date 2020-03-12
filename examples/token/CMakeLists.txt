@@ -1,4 +1,6 @@
+project(token)
 cmake_minimum_required(VERSION 3.5)
+
 include(ExternalProject)
 # if no cdt root is given use default path
 if(WASM_CDT_ROOT STREQUAL "" OR NOT WASM_CDT_ROOT)

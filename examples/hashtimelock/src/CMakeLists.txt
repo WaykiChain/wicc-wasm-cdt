@@ -1,7 +1,11 @@
 project(hashtimelock)
+cmake_minimum_required(VERSION 3.5)
 
 set(WASM_WASM_OLD_BEHAVIOR "Off")
 find_package(wasm.cdt)
+
+message(STATUS "CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}")
+message(STATUS "CMAKE_BINARY_DIR ${CMAKE_BINARY_DIR}")
 
 add_contract( hashtimelock hashtimelock hashtimelock.cpp )
 target_include_directories( hashtimelock PUBLIC ${CMAKE_SOURCE_DIR}/../include )
