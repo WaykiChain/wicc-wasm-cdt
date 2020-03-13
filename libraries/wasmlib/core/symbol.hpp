@@ -9,12 +9,33 @@
 #include "serialize.hpp"
 #include "print.hpp"
 #include "datastream.hpp"
+#include "strings.hpp"
 
 #include <tuple>
 #include <limits>
 #include <string_view>
 
 namespace wasm {
+
+
+    // inline string ltrim( const string &str ) {
+    //     int h = 0, t = str.size();
+    //     while (h < t && (str[h] == ' ' || str[h] == '\t')) h++;
+    //     return str.substr(h, t - h);
+    // }
+
+    // inline string rtrim( const string &str ) {
+    //     int h = 0, t = str.size();
+    //     while (h < t && (str[t - 1] == ' ' || str[t - 1] == '\t')) t--;
+    //     return str.substr(h, t - h);
+    // }
+
+    // inline string trim( const string &s ) {
+    //     string str = s;
+    //     ltrim(rtrim(str));
+    //     return str;
+    // }
+    
   /**
    *  @defgroup symbol Symbol
    *  @ingroup core
@@ -253,6 +274,7 @@ namespace wasm {
     */
    class symbol {
    public:
+      static constexpr uint8_t max_precision = 18;
       /**
        * Construct a new symbol object defaulting to a value of 0
        */
@@ -273,7 +295,9 @@ namespace wasm {
        */
       constexpr symbol( symbol_code sc, uint8_t precision )
       : value( (sc.raw() << 8) | static_cast<uint64_t>(precision) )
-      {}
+      {
+          check( precision <= max_precision, "precision should be <= 18");
+      }
 
       /**
        * Construct a new symbol given a string and a uint8_t precision.
@@ -283,17 +307,36 @@ namespace wasm {
        */
       constexpr symbol( std::string_view ss, uint8_t precision )
       : value( (symbol_code(ss).raw() << 8)  | static_cast<uint64_t>(precision) )
-      {}
+      {
+          check( precision <= max_precision, "precision should be <= 18");
+      }
 
       /**
        * Is this symbol valid
        */
-      constexpr bool is_valid()const                 { return code().is_valid(); }
+      constexpr bool is_valid()const                 
+      { 
+          return code().is_valid() && precision() <= max_precision; 
+      }
 
       /**
        * This symbol's precision
        */
       constexpr uint8_t precision()const             { return static_cast<uint8_t>( value & 0xFFull ); }
+
+      /**
+       * This symbol's precision in 10
+       */
+      uint64_t precision_in_10() const {
+          check( precision() <= max_precision, "precision should be <= 18");
+          uint64_t p10 = 1;
+          uint64_t p = precision();
+          while (p > 0) {
+              p10 *= 10;
+              --p;
+          }
+          return p10;
+      }
 
       /**
        * Returns representation of symbol name
@@ -318,6 +361,26 @@ namespace wasm {
          auto end = code().write_as_string( buffer, buffer + sizeof(buffer) );
          if( buffer < end )
             ::wasm::print( buffer, (end-buffer) );
+      }
+
+
+       /**
+       * %symbole from std:string
+       *
+       * @brief %symbole from std:string
+       */
+      static symbol from_string( const string &from ) {
+
+          string s = trim(from);
+          check(!s.empty(), "creating symbol from empty string");
+          auto comma_pos = s.find(',');
+          check(comma_pos != string::npos, "missing comma in symbol. eg. 8,WICC");
+          auto prec_part = s.substr(0, comma_pos);
+          uint8_t p = atoi(prec_part.data());
+          string name_part = s.substr(comma_pos + 1);
+          check( p <= max_precision, "precision should be <= 18");
+
+          return symbol(name_part, p);
       }
 
       /**
