@@ -1,4 +1,4 @@
-hash time lock
+flip
 -------------
 
  - How to Build 
@@ -10,5 +10,5 @@ $ cmake ..
 $ make
 ```
  - After build 
-   - The built smart contract is under the 'hashtimelock' directory in the 'build' directory
-   - You can find hashtimelock.wasm and hashtimelock.abi in the './build/hashtimelock' directory
+   - The built smart contract is under the 'flip' directory in the 'build' directory
+   - You can find flip.wasm and flip.abi in the './build/flip' directory

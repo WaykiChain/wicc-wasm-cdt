@@ -1,6 +1,7 @@
+
 <h1 class="contract"> transfer </h1>
 
-transfer is entrance for create a lock
+transfer is an entrance for create a lock
 
 <h1 class="contract"> unlock </h1>
 
