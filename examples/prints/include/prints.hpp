@@ -18,7 +18,7 @@ namespace wasm {
          ACTION print2( int128_t a, int128_t b );
          ACTION print3( float a, float b, float c );
          ACTION print4( double a, double b, double c );
-         // ACTION print5( checksum160 a, checksum256 b, checksum512 c );
+         ACTION print5();
          ACTION printinf();
    };
 

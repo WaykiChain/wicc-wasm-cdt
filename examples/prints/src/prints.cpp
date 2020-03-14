@@ -1,5 +1,6 @@
 #include <prints.hpp>
 #include <chrono>
+#include <system.hpp>
 
 using namespace wasm;
 using std::chrono::system_clock;
@@ -118,51 +119,18 @@ static inline string FromHex( string str ) {
 }
 
 
-// ACTION prints::print5( checksum160 a, checksum256 b, checksum512 c )
-// {
-//     // print(sizeof(checksum160));
-//     // print("\n");
-//     // print(sizeof(checksum256));
-//     // print("\n");
-//     // print(sizeof(checksum512));
-//     // print("\n");
+ACTION prints::print5()
+{
 
-//     vector<char> a_v(&a.hash[0], &a.hash[sizeof(a.hash)/sizeof(a.hash[0])]);
-//     vector<char> b_v(&b.hash[0], &b.hash[sizeof(b.hash)/sizeof(b.hash[0])]);
-//     vector<char> c_v(&c.hash[0], &c.hash[sizeof(c.hash)/sizeof(c.hash[0])]);
+    wasm::checksum256 txid = get_txid();
+    txid.print();
 
-//     // print(a_v.size());
-//     // print("\n");
-//     // print(b_v.size());
-//     // print("\n");
-//     // print(c_v.size());
-//     // print("\n");
-    
-//      printhex(a_v.data(), a_v.size());
-//      print("\n");
-//      printhex(b_v.data(), b_v.size());
-//      print("\n");
-//      printhex(c_v.data(), c_v.size());
-//      print("\n");
+    print(" ");
 
-//      string a_s("ba7816bf8f01cfea414140de5dae2223b00361a3000000000000000000000000");
-//      string b_s("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
-//      string c_s("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015adba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    wasm::asset price = get_system_asset_price(symbol("WICC", 8), symbol("USD", 8));
+    print(price.to_string());
 
-//      vector<char> a_v2(FromHex(a_s).begin(), FromHex(a_s).end());
-//      vector<char> b_v2(FromHex(b_s).begin(), FromHex(b_s).end());
-//      vector<char> c_v2(FromHex(c_s).begin(), FromHex(c_s).end());
-
-//      printhex(FromHex(a_s).data(), FromHex(a_s).size());
-//      print("\n");
-//      printhex(FromHex(b_s).data(), FromHex(b_s).size());
-//      print("\n");
-//      printhex(FromHex(c_s).data(), FromHex(c_s).size());
-
-//      // check( a_v == a_v2, "a is defferent from a_v2" );
-//      // check( b_v == b_v2, "b is defferent from b_v2" );
-//      // check( c_v == c_v2, "c is defferent from c_v2" );
-// }
+}
 
 ACTION prints::printinf( )
 {
@@ -177,7 +145,7 @@ ACTION prints::printinf( )
 }
 
 
-WASM_DISPATCH( prints, (printnormal)(print1)(print2)(print3)(print4)(printinf))
+WASM_DISPATCH( prints, (printnormal)(print1)(print2)(print3)(print4)(print5)(printinf))
 
 
 

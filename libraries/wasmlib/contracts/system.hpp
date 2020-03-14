@@ -5,6 +5,8 @@
 #pragma once
 #include "../core/time.hpp"
 #include "../core/check.hpp"
+#include "../core/asset.hpp"
+#include "../core/symbol.hpp"
 
 namespace wasm {
   namespace internal_use_do_not_use {
@@ -39,6 +41,32 @@ namespace wasm {
    }
 
 
+   /**
+   *  Returns the time in seconds from 1970 of the current block as a block_timestamp
+   *
+   *  @ingroup system
+   *  @return time in seconds from 1970 of the current block as a block_timestamp
+   */
    uint64_t current_block_time();
+
+
+   /**
+   *  Returns the txid in hash of the current txid
+   *
+   *  @ingroup system
+   *  @return time the txid in hash of the current txid
+   */
+   wasm::checksum256 get_txid();
+
+  /**
+   *  Returns the txid in hash from 1970 of the current txid
+   *
+   *  @ingroup system
+   *  @return time the txid in hash from 1970 of the current txid
+   */
+   wasm::asset get_system_asset_price(symbol base, symbol quote);
+
+
+
 
 }
