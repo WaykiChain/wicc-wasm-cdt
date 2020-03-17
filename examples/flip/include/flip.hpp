@@ -54,7 +54,7 @@ CONTRACT flip : public contract {
                 asset tab);
      void tend( checksum256 id, asset lot, asset bid, name guy);
      void dent( checksum256 id, asset lot, asset bid, name guy);
-     void yank(checksum256 id, name usr, asset payback);
+     void yank( checksum256 id, name usr,  asset payback);
 
 
      typedef wasm::table< "bids"_n, bid_t, checksum256 > bids;  	

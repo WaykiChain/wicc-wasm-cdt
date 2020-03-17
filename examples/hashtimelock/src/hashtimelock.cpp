@@ -3,9 +3,6 @@
 #include <strings.hpp>
 
 using namespace wasm;
-struct __attribute__((aligned (16))) capi_checksum256 {
-    uint8_t hash[32];
-};
 
 
 ACTION hashtimelock::transfer(name from,
@@ -23,9 +20,9 @@ ACTION hashtimelock::transfer(name from,
     name unlocker;
     uint64_t refund_lock_seconds;
 
-    capi_checksum256 hash;
+    uint8_t hash[32];
     memcpy(&hash, from_hex(transfer_memo[0]).data(), 32);
-    lock_hash = {hash.hash};
+    lock_hash = {hash};
     lock_hash.print();
 
     unlocker = name(transfer_memo[1]);

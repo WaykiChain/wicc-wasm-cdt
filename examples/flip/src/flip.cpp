@@ -3,10 +3,6 @@
 #include <strings.hpp>
 
 using namespace wasm;
-struct __attribute__((aligned (16))) capi_checksum256 {
-    uint8_t hash[32];
-};
-
 
 ACTION flip::transfer(name from,
                       name to,
@@ -146,7 +142,7 @@ void flip::tend(checksum256 id, asset lot, asset bid, name guy) {
     }
 
 
-    //本次多出的部分转给拍卖接受账户
+    //本次多出的部分转给拍卖接收账户
     wasm::transaction inline_trx2(bid_object.bid_issuer,
                                  name("transfer"),
                                  std::vector < permission > {{get_self(), name("wasmio.code")}},
@@ -193,7 +189,7 @@ void flip::dent(checksum256 id, asset lot, asset bid, name guy) {
         inline_trx1.send();
     }
 
-    //本次多出的部分转给拍卖接受账户
+    //本次多出的部分转给拍卖lot接收账户
     wasm::transaction inline_trx2(bid_object.lot_issuer,
                                   name("transfer"),
                                   std::vector < permission > {{get_self(), name("wasmio.code")}},
@@ -247,7 +243,6 @@ void flip::yank(checksum256 id, name usr, asset payback) {
     check(bid_object.bid <  bid_object.tab, "already dent phase");
     check(bid_object.bid <= payback, "pay back money is not enough");
     check(bid_object.usr == usr, "not matching usr");
-
 
     //退回上次出价者
     if(bid_object.bid > 0){
