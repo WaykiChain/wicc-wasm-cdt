@@ -90,12 +90,9 @@ void flip::kick(checksum256 id,
     bid_t bid_object;
     bids bids_table(get_self(), bid_scope);
     check(!bids_table.get(bid_object, id), "bid has already exists");
-
     check(lot > 0, "lot must > 0");
 
     auto now = current_block_time(); 
-
-    print(tab.to_string());
 
     bids_table.emplace(get_self(), [&](auto &s) {
         s.id         = id;
@@ -220,7 +217,8 @@ void flip::deal(checksum256 id, name guy) {
     bid_t bid_object;
     bids bids_table(get_self(), bid_scope);
     check(bids_table.get(bid_object, id), "bid doesn't exists");
-    check(bid_object.tic != 0 && bid_object.tic < now && bid_object.end < now, "not finished");
+    check(bid_object.tic != 0, "bid closed");
+    check(bid_object.tic < now && bid_object.end < now, "bid not finished");
     check(bid_object.guy == guy , "not matching guy");
 
     //抵押物转账给guy

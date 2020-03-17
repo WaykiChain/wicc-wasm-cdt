@@ -317,19 +317,19 @@ namespace wasm {
       }
 
       friend bool operator<( const asset& a, int64_t b ) {
-         return (a.amount < b);
+          return (a.amount < b);
       }
 
       friend bool operator<=( const asset& a, int64_t b ) {
-         return (a.amount <= b);
+          return (a.amount <= b);
       }
 
       friend bool operator>( const asset& a, int64_t b ) {
-         return (a.amount > b);
+          return (a.amount > b);
       }
 
       friend bool operator>=( const asset& a, int64_t b ) {
-         return (a.amount >= b);
+          return (a.amount >= b);
       }
 
 
