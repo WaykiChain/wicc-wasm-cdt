@@ -16,15 +16,15 @@ ACTION flip::transfer(name from,
 
     vector <string> transfer_memo = string_split(memo, ':');
     if(transfer_memo[0] == "kick"){
-        check(transfer_memo.size() == 8,
-           "memo must be kick:hash:tab:bank:beg:one:gal, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:1000.00000000 WUSD:wasmio.bank:10.00000000 WUSD:10.00000000 WICC:xiaoyu1111111");
-        check(transfer_memo[1].size() == 64, "hash size must be 32 bytes from sha256");
+        check(transfer_memo.size() == 7,
+           "memo must be kick:bid_id:tab:bank:beg:one:gal, eg. kick:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:1000.00000000 WUSD:wasmio.bank:10.00000000 WUSD:10.00000000 WICC:xiaoyu1111111");
+        check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
 
-        capi_checksum256 hash;
+        uint8_t hash[32];
         memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
-        checksum256 id = {hash.hash};
+        checksum256 id = {hash};
 
-        auto tab        = asset::from_string(transfer_memo[4]);
+        auto tab        = asset::from_string(transfer_memo[2]);
         auto bid        = tab; bid.set_amount(0);
         auto bid_issuer = name(transfer_memo[3]);        
 
@@ -43,15 +43,14 @@ ACTION flip::transfer(name from,
         check(bid.symbol == tab.symbol, "not matching tab symbol");
 
         kick(id, bid, bid_issuer, lot, lot_issuer, beg, one, usr, gal, tab);
-
     } else if(transfer_memo[0] == "tend" || transfer_memo[0] == "dent"){
         check(transfer_memo.size() == 3,
-           "memo must be tend:hash:asset:asset, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:20.00000000 WICC");
-        check(transfer_memo[1].size() == 64, "hash size must be 32 bytes from sha256");
+           "memo must be tend:bid_id:asset:asset, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:20.00000000 WICC");
+        check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
 
-        capi_checksum256 hash;
+        uint8_t hash[32];
         memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
-        checksum256 id = {hash.hash};
+        checksum256 id = {hash};
 
         asset lot = asset::from_string(transfer_memo[2]);
         asset bid = quantity;
@@ -61,6 +60,17 @@ ACTION flip::transfer(name from,
             tend(id, lot, bid, from);
         else
             dent(id, lot, bid, from);
+    } else if(transfer_memo[0] == "yank"){
+        check(transfer_memo.size() == 2,
+           "memo must be yank:bid_id, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4");
+        check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
+
+        uint8_t hash[32];
+        memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
+        checksum256 id = {hash};
+
+        auto usr       = from;
+        yank(id, usr, quantity);
     }
 
 }
@@ -77,12 +87,15 @@ void flip::kick(checksum256 id,
                 asset tab) {
 
     //require_auth(usr);
-
     bid_t bid_object;
     bids bids_table(get_self(), bid_scope);
     check(!bids_table.get(bid_object, id), "bid has already exists");
 
+    check(lot > 0, "lot must > 0");
+
     auto now = current_block_time(); 
+
+    print(tab.to_string());
 
     bids_table.emplace(get_self(), [&](auto &s) {
         s.id         = id;
@@ -112,27 +125,28 @@ void flip::tend(checksum256 id, asset lot, asset bid, name guy) {
     //check(bids_table.guy != {0}, "guy not set");
 
     auto now = current_block_time();
-    check(bid_object.bid_issuer != get_first_receiver(), "not matching bid issuer");
+    check(bid_object.bid_issuer == get_first_receiver(), "not matching bid issuer");
 
     check(bid_object.lot.symbol == lot.symbol, "not matching lot symbol");
     check(bid_object.bid.symbol == bid.symbol, "not matching bid symbol");
 
-    check(bid_object.tic != 0, "closed");
+    check(bid_object.tic != 0, "bid closed");
     check(bid_object.tic > now, "already finished tic");
     check(bid_object.end > now, "already finished end");
 
     check(lot == bid_object.lot , "not matching lot");
     check(bid <  bid_object.tab , "higher than tab" );
-    check(bid >= bid_object.bid , "bid not higher"  );
 
     check(bid - bid_object.bid  >= bid_object.beg  , "insufficient increase");  
 
     //退回给上次出价者
-    wasm::transaction inline_trx1(bid_object.bid_issuer,
-                                 name("transfer"),
-                                 std::vector < permission > {{get_self(), name("wasmio.code")}},
-                                 std::tuple(get_self(), bid_object.guy, bid_object.bid, string("tend")));
-    inline_trx1.send();
+    if(bid_object.bid > 0){
+        wasm::transaction inline_trx1(bid_object.bid_issuer,
+                                     name("transfer"),
+                                     std::vector < permission > {{get_self(), name("wasmio.code")}},
+                                     std::tuple(get_self(), bid_object.guy, bid_object.bid, string("tend")));
+        inline_trx1.send();
+    }
 
 
     //本次多出的部分转给拍卖接受账户
@@ -153,33 +167,35 @@ void flip::tend(checksum256 id, asset lot, asset bid, name guy) {
 void flip::dent(checksum256 id, asset lot, asset bid, name guy) {
 
     //require_auth(guy);
-
     bid_t bid_object;
     bids bids_table(get_self(), bid_scope);
     check(bids_table.get(bid_object, id), "bid doesn't exists");
     //check(bids_table.guy != {0}, "guy not set");
 
     auto now = current_block_time();
-    check(bid_object.bid_issuer != get_first_receiver(), "not matching bid issuer");
+    check(bid_object.bid_issuer == get_first_receiver(), "not matching bid issuer");
     check(bid_object.lot.symbol == lot.symbol, "not matching lot symbol");
     check(bid_object.bid.symbol == bid.symbol, "not matching bid symbol");
 
-    check(bid_object.tic != 0, "closed");
+    check(bid_object.tic != 0, "bid closed");
     check(bid_object.tic > now, "already finished tic");
     check(bid_object.end > now, "already finished end");
 
-    check(bid == bid_object.bid , "not matching bid" );
+    // check(bid == bid_object.bid , "not matching bid" );
     check(bid == bid_object.tab , "tend not finished");
     check(lot <  bid_object.lot , "lot not lower"    );   
 
-    check(lot - bid_object.lot  >= bid_object.one  , "insufficient decrease");  
+    check(bid_object.lot - lot  >= bid_object.one  , "insufficient decrease");  
    
     //退回给上次出价者
-    wasm::transaction inline_trx1(bid_object.bid_issuer,
-                                  name("transfer"),
-                                  std::vector < permission > {{get_self(), name("wasmio.code")}},
-                                  std::tuple(get_self(), bid_object.guy, bid_object.bid, string("dent")));
-    inline_trx1.send();
+    if(bid_object.bid > 0){
+        wasm::transaction inline_trx1(bid_object.bid_issuer,
+                                      name("transfer"),
+                                      std::vector < permission > {{get_self(), name("wasmio.code")}},
+                                      std::tuple(get_self(), bid_object.guy, bid_object.bid, string("dent")));
+        inline_trx1.send();
+    }
+
     //本次多出的部分转给拍卖接受账户
     wasm::transaction inline_trx2(bid_object.lot_issuer,
                                   name("transfer"),
@@ -189,6 +205,7 @@ void flip::dent(checksum256 id, asset lot, asset bid, name guy) {
 
     bids_table.modify(bid_object, wasm::no_payer, [&](auto &s) {
         s.guy = guy;
+        s.bid = bid;
         s.lot = lot;
         s.tic = now + ttl;
     });  
@@ -204,21 +221,24 @@ void flip::deal(checksum256 id, name guy) {
     bids bids_table(get_self(), bid_scope);
     check(bids_table.get(bid_object, id), "bid doesn't exists");
     check(bid_object.tic != 0 && bid_object.tic < now && bid_object.end < now, "not finished");
-    //check(bid_object.guy == guy , "not matching guy");
+    check(bid_object.guy == guy , "not matching guy");
 
     //抵押物转账给guy
-    wasm::transaction inline_trx(bid_object.lot_issuer,
-                                 name("transfer"),
-                                 std::vector < permission > {{get_self(), name("wasmio.code")}},
-                                 std::tuple(get_self(), guy, bid_object.lot, string("deal")));
-    inline_trx.send();
-    //delete bid
+    if(bid_object.lot > 0){
+        wasm::transaction inline_trx(bid_object.lot_issuer,
+                                     name("transfer"),
+                                     std::vector < permission > {{get_self(), name("wasmio.code")}},
+                                     std::tuple(get_self(), guy, bid_object.lot, string("deal")));
+        inline_trx.send();
+    }
+
+    //close bid
     bids_table.modify(bid_object, wasm::no_payer, [&](auto &s) {
         s.tic = 0;
     });
 }
 
-void flip::yank(checksum256 id, name usr) {
+void flip::yank(checksum256 id, name usr, asset payback) {
     require_auth(usr);
 
     bid_t bid_object;
@@ -226,26 +246,35 @@ void flip::yank(checksum256 id, name usr) {
     check(bids_table.get(bid_object, id), "bid doesn't exists");  
 
     check(bid_object.tic != 0, "closed");
-    //check(bids_table.guy != {0}, "guy not set");
-    check(bid_object.bid < bid_object.tab, "already dent phase");
+    check(bid_object.bid <  bid_object.tab, "already dent phase");
+    check(bid_object.bid <= payback, "pay back money is not enough");
+    check(bid_object.usr == usr, "not matching usr");
 
-    //退回给上次出价者
-    wasm::transaction inline_trx1(bid_object.bid_issuer,
-                                  name("transfer"),
-                                  std::vector < permission > {{get_self(), name("wasmio.code")}},
-                                  std::tuple(get_self(), bid_object.guy, bid_object.bid, string("yank")));
-    inline_trx1.send();
+
+    //退回上次出价者
+    if(bid_object.bid > 0){
+        wasm::transaction inline_trx1(bid_object.bid_issuer,
+                                      name("transfer"),
+                                      std::vector < permission > {{get_self(), name("wasmio.code")}},
+                                      std::tuple(get_self(), bid_object.guy, bid_object.bid, string("yank")));
+        inline_trx1.send();
+    }
 
     //抵押物退回usr
-    wasm::transaction inline_trx2(bid_object.lot_issuer,
-                                  name("transfer"),
-                                  std::vector < permission > {{get_self(), name("wasmio.code")}},
-                                  std::tuple(get_self(), usr, bid_object.lot, string("yank")));  
-    inline_trx2.send(); 
-    //delete bid
+    if(bid_object.lot > 0){
+        wasm::transaction inline_trx2(bid_object.lot_issuer,
+                                      name("transfer"),
+                                      std::vector < permission > {{get_self(), name("wasmio.code")}},
+                                      std::tuple(get_self(), usr, bid_object.lot, string("yank")));  
+        inline_trx2.send(); 
+    }
+
+    //close bid
     bids_table.modify(bid_object, wasm::no_payer, [&](auto &s) {
         s.tic = 0;
     }); 
+
+
 }
 
 
@@ -257,9 +286,6 @@ void apply(uint64_t receiver, uint64_t code, uint64_t action) {
             break;
         case wasm::name("deal").value:
             wasm::execute_action(wasm::name(receiver), wasm::name(code), &flip::deal);
-            break;
-        case wasm::name("yank").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &flip::yank);
             break;
         default:
             check(false, "action does not exist");

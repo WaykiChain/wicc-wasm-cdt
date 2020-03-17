@@ -18,7 +18,6 @@ CONTRACT flip : public contract {
       using contract::contract;
       ACTION transfer( name from, name to, asset quantity, string memo );
       ACTION deal(checksum256 id, name guy );
-      ACTION yank(checksum256 id, name usr );
 
   private:
      TABLE  bid_t {
@@ -55,9 +54,10 @@ CONTRACT flip : public contract {
                 asset tab);
      void tend( checksum256 id, asset lot, asset bid, name guy);
      void dent( checksum256 id, asset lot, asset bid, name guy);
+     void yank(checksum256 id, name usr, asset payback);
 
 
-     typedef wasm::table< "bid"_n, bid_t, checksum256 > bids;  	
+     typedef wasm::table< "bids"_n, bid_t, checksum256 > bids;  	
 
 
 };
