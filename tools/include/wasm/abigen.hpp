@@ -60,7 +60,7 @@ namespace wasmcdt { namespace cdt {
             try {
                validate_name( decl->getName().str(), error_handler );
             } catch (...) {
-               std::cout << "Error, name <" <<decl->getName().str() << "> is an invalid EOSIO name.\n";
+               std::cout << "Error, name <" <<decl->getName().str() << "> is an invalid WASM action name.\n";
                throw;
             }
             ret.name = decl->getName().str();
@@ -69,7 +69,7 @@ namespace wasmcdt { namespace cdt {
             try {
                validate_name( action_name.str(), error_handler );
             } catch (...) {
-               std::cout << "Error, name <" << action_name.str() << "> is an invalid EOSIO name.\n";
+               std::cout << "Error, name <" << action_name.str() << "> is an invalid WASM action name.\n";
                throw;
             }
             ret.name = action_name.str();
@@ -92,7 +92,7 @@ namespace wasmcdt { namespace cdt {
             try {
                validate_name( decl->getNameAsString(), error_handler );
             } catch (...) {
-               std::cout << "Error, name <" <<decl->getNameAsString() << "> is an invalid EOSIO name.\n";
+               std::cout << "Error, name <" <<decl->getNameAsString() << "> is an invalid WASM action name.\n";
             }
             ret.name = decl->getNameAsString();
          }
@@ -100,7 +100,7 @@ namespace wasmcdt { namespace cdt {
             try {
                validate_name( action_name.str(), error_handler );
             } catch (...) {
-               std::cout << "Error, name <" << action_name.str() << "> is an invalid EOSIO name.\n";
+               std::cout << "Error, name <" << action_name.str() << "> is an invalid WASM action name.\n";
             }
             ret.name = action_name.str();
          }

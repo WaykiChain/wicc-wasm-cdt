@@ -35,5 +35,4 @@ CONTRACT hashtimelock : public contract {
 
      typedef wasm::table< "htls"_n, hash_time_lock, checksum256 > htls;  	
 
-
 };

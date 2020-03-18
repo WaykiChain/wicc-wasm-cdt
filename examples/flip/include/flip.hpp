@@ -33,7 +33,7 @@ CONTRACT flip : public contract {
         uint64_t       end;
 
         asset          beg;//minimum bid increase
-        asset          one;//minimum log increase
+        asset          one;//minimum log decrease
 
         name           usr;//lot's owner
         name           gal;//receives bid income
