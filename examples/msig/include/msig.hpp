@@ -13,7 +13,7 @@ struct file_t{
     //std::vector<approval> requested_approvals;
     uint64_t          deadline; // in days
     name              action;
-    std::vector<char> params;//use rpcapi jsontobinwasm to serialization from fil1/file2
+    std::vector<char> params;//use rpcapi jsontobinwasm to serialize
 };
 
 CONTRACT msig : public contract {
