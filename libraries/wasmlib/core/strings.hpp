@@ -11,13 +11,13 @@
 using namespace std;
 namespace wasm {
 
-    inline string ltrim( const string &str ) {
+    inline string ltrim( const string& str ) {
         int h = 0, t = str.size();
         while (h < t && (str[h] == ' ' || str[h] == '\t')) h++;
         return str.substr(h, t - h);
     }
 
-    inline string rtrim( const string &str ) {
+    inline string rtrim( const string& str ) {
         int h = 0, t = str.size();
         while (h < t && (str[t - 1] == ' ' || str[t - 1] == '\t')) t--;
         return str.substr(h, t - h);
@@ -46,7 +46,7 @@ namespace wasm {
 
     }
 
-    inline string from_hex(string str) {
+    inline string from_hex(const string& str) {
 
         std::map<char, uint8_t> hex = {
                 {'0', 0x00},
@@ -68,7 +68,7 @@ namespace wasm {
         };
         vector <uint8_t> v;
 
-        for (std::string::size_type i = 0; i < str.size();) {
+        for (int i = 0; i < str.size();) {
 
             uint8_t h = hex[(char) str[i]];
             uint8_t l = hex[(char) str[i + 1]];
@@ -79,6 +79,42 @@ namespace wasm {
         }
 
         return string(v.begin(), v.end());
+    }
+
+
+    inline vector <char> from_hex(const vector <char>& bytes) {
+
+        std::map<char, uint8_t> hex = {
+                {'0', 0x00},
+                {'1', 0x01},
+                {'2', 0x02},
+                {'3', 0x03},
+                {'4', 0x04},
+                {'5', 0x05},
+                {'6', 0x06},
+                {'7', 0x07},
+                {'8', 0x08},
+                {'9', 0x09},
+                {'a', 0x0a},
+                {'b', 0x0b},
+                {'c', 0x0c},
+                {'d', 0x0d},
+                {'e', 0x0e},
+                {'f', 0x0f}
+        };
+        vector <uint8_t> v;
+
+        for (int i = 0; i < bytes.size();) {
+
+            uint8_t h = hex[(char) bytes[i]];
+            uint8_t l = hex[(char) bytes[i + 1]];
+            uint8_t t = l | h << 4;
+            v.push_back(t);
+
+            i += 2;
+        }
+
+        return vector <char>(v.begin(), v.end());
     }
 
 }

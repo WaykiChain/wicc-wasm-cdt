@@ -39,7 +39,7 @@ ACTION msig::approve(name proposer, name proposal_name, name approver){
 
     admin_t admin_object;
     admins admins_table(get_self(), get_self().value);
-    check(!admins_table.get(admin_object, approver), "approver doesn't exists");
+    check(admins_table.get(admin_object, approver), "approver doesn't exists");
 
     approvals_info_t approvals_info_object;
     approvals2 approvals2_table(get_self(), proposer.value);
@@ -76,25 +76,24 @@ ACTION msig::exec( name proposer, name proposal_name, name executer ){
     approvals2 approvals2_table(get_self(), proposer.value);
     check(approvals2_table.get(approvals_info_object, proposal_name), "approvals infos doesn't exists");   
     check(!approvals_info_object.closed, "proposal closed");   
+    check(approvals_info_object.threshold <= approvals_info_object.provided, "didn't get enough approvals");
 
-    if(approvals_info_object.threshold <= approvals_info_object.provided){
+    approvals2_table.modify(approvals_info_object, wasm::no_payer, [&](auto &s) {    
+        s.closed = true;
 
-        approvals2_table.modify(approvals_info_object, wasm::no_payer, [&](auto &s) {    
-            s.closed = true;
+        proposal_t proposal_object;
+        proposals proposals_table(get_self(), proposer.value);
+        check(proposals_table.get(proposal_object, proposal_name),"proposal doesn't exists");
 
-            proposal_t proposal_object;
-            proposals proposals_table(get_self(), proposer.value);
-            check(proposals_table.get(proposal_object, proposal_name),"proposal doesn't exists");
-
-            if(proposal_object.file.action == name("file1")){
-                std:tuple<uint64_t,uint64_t> param = unpack<std::tuple<uint64_t,uint64_t>>(proposal_object.file.params);
-                file1(std::get<0>(param),std::get<0>(param));
-            } else if(proposal_object.file.action == name("file2")){
-                string param = unpack<string>(proposal_object.file.params);
-                file2(param);
-            }
-        });
-    }
+        std::vector<char> param_bytes = from_hex(proposal_object.file.params);
+        if(proposal_object.file.action == name("file1")){
+            std:tuple<uint64_t,uint64_t> params = unpack<std::tuple<uint64_t,uint64_t>>(param_bytes);
+            file1(std::get<0>(params), std::get<1>(params));
+        } else if(proposal_object.file.action == name("file2")){
+            string params = unpack<string>(param_bytes);
+            file2(params);
+        }
+    });
 
 }
 

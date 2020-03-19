@@ -6,18 +6,22 @@ using namespace wasm;
 using namespace std;
 
 
-static constexpr int64_t  one_day = 1*24*60*60;
+//static constexpr int64_t  one_day = 1*24*60*60;
+static constexpr int64_t  one_day = 1;
 
 struct file_t{
     //std::vector<approval> requested_approvals;
     uint64_t          deadline; // in days
     name              action;
-    std::vector<char> params;
+    std::vector<char> params;//use rpcapi jsontobinwasm to serialization from fil1/file2
 };
 
 CONTRACT msig : public contract {
    public:
       using contract::contract;
+      ACTION file1(uint64_t p1, uint64_t p2);
+      ACTION file2(string   p);
+      
       ACTION propose(name proposer, name proposal_name, file_t file);
       ACTION approve(name proposer, name proposal_name, name approver);
       ACTION exec( name proposer, name proposal_name, name executer );
@@ -25,16 +29,12 @@ CONTRACT msig : public contract {
 
       ACTION setthreshold(name file, uint64_t threshold);
       ACTION setadmin(name admin,    uint64_t weight);
-
-      ACTION file1(uint64_t p1, uint64_t p2);
-      ACTION file2(string   p);
   private:
       TABLE proposal_t {
           name   proposal_name;
           file_t file; 
           name  primary_key()const { return proposal_name; }
       };
-
       // struct approval {
       //     name     account;
       //     uint64_t weight;
@@ -51,13 +51,13 @@ CONTRACT msig : public contract {
           name  primary_key()const { return proposal_name; }
       };
 
-      TABLE authority_t{
+      TABLE authority_t {
           name     file;
           uint64_t threshold;
           name  primary_key()const { return file; }
       };
 
-      TABLE admin_t{
+      TABLE admin_t {
           name     account;
           uint64_t weight;
           name  primary_key()const { return account; }
