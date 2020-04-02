@@ -6,7 +6,9 @@
 using namespace wasm;
 using std::chrono::system_clock;
 
-ACTION eidos::create( name   issuer,
+static regid wasmio_bank = wasm::regid("800-2");
+
+ACTION eidos::create( regid  issuer,
                       asset  maximum_supply )
 {
     require_auth( _self );
@@ -28,7 +30,7 @@ ACTION eidos::create( name   issuer,
 }
 
 
-ACTION eidos::issue( name to, asset quantity, string memo )
+ACTION eidos::issue( regid to, asset quantity, string memo )
 {
 
     auto sym = quantity.symbol;
@@ -79,15 +81,15 @@ ACTION eidos::retire( asset quantity, string memo )
     sub_balance( st.issuer, quantity );
 }
 
-ACTION eidos::transfer( name    from,
-                        name    to,
+ACTION eidos::transfer( regid   from,
+                        regid   to,
                         asset   quantity,
                         string  memo )
 {
 
-    if( to == get_self() &&  wasm::name( "wasmio.bank" ) == get_first_receiver() ){
+    if( to == get_self() &&  wasmio_bank == get_first_receiver() ){
        print("1.inline wasmio.bank transfer:", quantity.to_string(),"\n");
-       wasm::transaction inline_trx(name("wasmio.bank"), name("transfer"), std::vector<permission>{{to, name("wasmio.owner")}}, std::tuple(to, from, quantity, memo));
+       wasm::transaction inline_trx(wasmio_bank, name("transfer"), std::vector<permission>{{to, name("wasmio.owner")}}, std::tuple(to, from, quantity, memo));
        inline_trx.send();
 
        print("2.token.transfer check_balance\n");
@@ -108,7 +110,7 @@ ACTION eidos::transfer( name    from,
        inline_trx2.send();
     }
 
-    if(wasm::name( "wasmio.bank" ) == get_first_receiver()) return;
+    if(wasmio_bank== get_first_receiver()) return;
 
     print("5.from:",from, " to:", to, " quantity:",quantity.to_string()," memo:", memo);
 
@@ -136,7 +138,7 @@ ACTION eidos::transfer( name    from,
     
 }
 
-void eidos::sub_balance( name owner, asset value ) {
+void eidos::sub_balance( regid owner, asset value ) {
    accounts from_acnts( _self, owner.value );
 
    account from;
@@ -148,7 +150,7 @@ void eidos::sub_balance( name owner, asset value ) {
       });
 }
 
-void eidos::add_balance( name owner, asset value, name payer )
+void eidos::add_balance( regid owner, asset value, regid payer )
 {
    accounts to_acnts( _self, owner.value );
 
@@ -165,7 +167,7 @@ void eidos::add_balance( name owner, asset value, name payer )
    }
 }
 
-ACTION eidos::open( name owner, const symbol& symbol, name payer )
+ACTION eidos::open( regid owner, const symbol& symbol, regid payer )
 {
    require_auth( payer );
 
@@ -187,7 +189,7 @@ ACTION eidos::open( name owner, const symbol& symbol, name payer )
    }
 }
 
-ACTION eidos::close( name owner, const symbol& symbol )
+ACTION eidos::close( regid owner, const symbol& symbol )
 {
    require_auth( owner );
    accounts acnts( _self, owner.value );
@@ -201,25 +203,25 @@ ACTION eidos::close( name owner, const symbol& symbol )
 //eidos
 extern "C" {
    void apply( uint64_t receiver, uint64_t code, uint64_t action ) {
-       if(code == receiver || code == wasm::name( "wasmio.bank" ).value ){
+       if(code == receiver || code == wasmio_bank.value ){
            switch( action ) { 
              case wasm::name( "create" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::create ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::create ); 
                  break;
              case wasm::name( "issue" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::issue ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::issue ); 
                  break;
              case wasm::name( "retire" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::retire ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::retire ); 
                  break;
              case wasm::name( "transfer" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::transfer ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::transfer ); 
                  break;
              case wasm::name( "open" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::open ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::open ); 
                  break;
              case wasm::name( "close" ).value: 
-                 wasm::execute_action( wasm::name(receiver), wasm::name(code), &eidos::close ); 
+                 wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &eidos::close ); 
                  break;
              default:
                  check(false, "action did not exist!");

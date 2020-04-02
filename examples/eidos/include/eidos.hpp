@@ -14,14 +14,14 @@ namespace wasm {
       public:
          using contract::contract;
  
-         ACTION create  ( name issuer,    asset  maximum_supply);
-         ACTION issue   ( name to,        asset  quantity, string memo );
-         ACTION transfer( name from,      name   to,       asset  quantity, string memo );
+         ACTION create  ( regid issuer,    asset  maximum_supply);
+         ACTION issue   ( regid to,        asset  quantity, string memo );
+         ACTION transfer( regid from,      regid   to,      asset  quantity, string memo );
          ACTION retire  ( asset quantity, string memo );
-         ACTION open    ( name owner, const symbol& symbol, name payer );
-         ACTION close   ( name owner, const symbol& symbol );
+         ACTION open    ( regid owner, const symbol& symbol, regid payer );
+         ACTION close   ( regid owner, const symbol& symbol );
 
-         static asset get_supply( name token_contract_account, symbol_code sym_code )
+         static asset get_supply( regid token_contract_account, symbol_code sym_code )
          {
             stats statstable( token_contract_account, sym_code.raw() );
             
@@ -30,7 +30,7 @@ namespace wasm {
             return st.supply;
          }
 
-         static asset get_balance( name token_contract_account, name owner, symbol_code sym_code )
+         static asset get_balance( regid token_contract_account, regid owner, symbol_code sym_code )
          {
             accounts accountstable( token_contract_account, owner.value );
 
@@ -41,7 +41,7 @@ namespace wasm {
 
       private:
          TABLE  account {
-            name     owner;
+            regid    owner;
             asset    balance;
 
             uint64_t primary_key()const { return balance.symbol.code().raw(); }
@@ -50,7 +50,7 @@ namespace wasm {
          TABLE  currency_stats {
             asset    supply;
             asset    max_supply;
-            name     issuer;
+            regid    issuer;
 
             uint64_t primary_key()const { return supply.symbol.code().raw(); }
          };
@@ -58,8 +58,8 @@ namespace wasm {
          typedef wasm::table< "accounts"_n, account,        uint64_t > accounts;
          typedef wasm::table< "stat"_n,     currency_stats, uint64_t > stats;
 
-         void sub_balance( name owner, asset value );
-         void add_balance( name owner, asset value, name ram_payer );
+         void sub_balance( regid owner, asset value );
+         void add_balance( regid owner, asset value, regid ram_payer );
 
    };
 
