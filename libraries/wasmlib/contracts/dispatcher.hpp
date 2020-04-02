@@ -20,7 +20,7 @@ namespace wasm {
     * @return true
     */
    template<typename T, typename... Args>
-   bool execute_action( name self, name code, void (T::*func)(Args...)  ) {
+   bool execute_action( regid self, regid code, void (T::*func)(Args...)  ) {
       size_t size = action_data_size();
 
       //using malloc/free here potentially is not exception-safe, although WASM doesn't support exceptions
@@ -53,7 +53,7 @@ namespace wasm {
  // Helper macro for WASM_DISPATCH_INTERNAL
  #define WASM_DISPATCH_INTERNAL( r, OP, elem ) \
     case wasm::name( BOOST_PP_STRINGIZE(elem) ).value: \
-       wasm::execute_action( wasm::name(receiver), wasm::name(code), &OP::elem ); \
+       wasm::execute_action( wasm::regid(receiver), wasm::regid(code), &OP::elem ); \
        break;
 
  // Helper macro for WASM_DISPATCH

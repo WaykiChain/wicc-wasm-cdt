@@ -7,11 +7,17 @@ using namespace wasm;
 ACTION flip::transfer(name from,
                       name to,
                       asset quantity,
-                      string memo) {
+                      string memo) 
+{
     if (to != get_self()) return;
 
     vector <string> transfer_memo = string_split(memo, ':');
-    if (transfer_memo[0] == "kick") {
+
+    uint64_t operate = transfer_memo[0].value;
+    switch(operate)
+    {
+       case name("kick").value:
+       {
         check(transfer_memo.size() == 7,
            "memo must be kick:bid_id:tab:bank:beg:one:gal, eg. kick:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:1000.00000000 WUSD:wasmio.bank:10.00000000 WUSD:10.00000000 WICC:xiaoyu1111111");
         check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
@@ -38,9 +44,15 @@ ACTION flip::transfer(name from,
         check(one.symbol == lot.symbol, "not matching one symbol");
         check(bid.symbol == tab.symbol, "not matching tab symbol");
 
-        kick(id, bid, bid_issuer, lot, lot_issuer, beg, one, usr, gal, tab);
-    } else if (transfer_memo[0] == "tend" || transfer_memo[0] == "dent") {
-        check(transfer_memo.size() == 3,
+        kick(id, bid, bid_issuer, lot, lot_issuer, beg, one, usr, gal, tab);    
+
+        break;    
+       }
+
+       case name("tend").value:
+       case name("dent").value:
+       {
+         check(transfer_memo.size() == 3,
            "memo must be tend:bid_id:asset:asset, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:20.00000000 WICC");
         check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
 
@@ -52,22 +64,87 @@ ACTION flip::transfer(name from,
         asset bid = quantity;
         //asset bid = asset::from_string(transfer_memo[3]);
 
-        if(transfer_memo[0] == "tend")
+        if(operate == name("tend").value)
             tend(id, lot, bid, from);
         else
             dent(id, lot, bid, from);
-    } else if (transfer_memo[0] == "yank") {
-        check(transfer_memo.size() == 2,
-           "memo must be yank:bid_id, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4");
-        check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
 
-        uint8_t hash[32];
-        memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
-        checksum256 id = {hash};
+        break;       
+       }
+       case name("yank"):
+       {
+           check(transfer_memo.size() == 2,
+                "memo must be yank:bid_id, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4");
+           check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
 
-        auto usr       = from;
-        yank(id, usr, quantity);
+           uint8_t hash[32];
+           memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
+           checksum256 id = {hash};
+
+           auto usr       = from;
+           yank(id, usr, quantity);
+       }
+       break;
     }
+
+
+    // if (name(transfer_memo[0]) == name("kick")) {
+    //     check(transfer_memo.size() == 7,
+    //        "memo must be kick:bid_id:tab:bank:beg:one:gal, eg. kick:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:1000.00000000 WUSD:wasmio.bank:10.00000000 WUSD:10.00000000 WICC:xiaoyu1111111");
+    //     check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
+
+    //     uint8_t hash[32];
+    //     memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
+    //     checksum256 id = {hash};
+
+    //     auto tab        = asset::from_string(transfer_memo[2]);
+    //     auto bid        = tab; bid.set_amount(0);
+    //     auto bid_issuer = name(transfer_memo[3]);        
+
+    //     auto lot        = quantity;
+    //     auto lot_issuer = get_first_receiver(); 
+    //     auto beg        = asset::from_string(transfer_memo[4]);
+    //     auto one        = asset::from_string(transfer_memo[5]);
+
+    //     //auto usr        = name(transfer_memo[6]);
+    //     auto usr        = from;
+    //     auto gal        = name(transfer_memo[6]);
+    //     //auto tab        = asset::from_string(transfer_memo[8]);
+        
+    //     check(bid.symbol == beg.symbol, "not matching beg symbol");
+    //     check(one.symbol == lot.symbol, "not matching one symbol");
+    //     check(bid.symbol == tab.symbol, "not matching tab symbol");
+
+    //     kick(id, bid, bid_issuer, lot, lot_issuer, beg, one, usr, gal, tab);
+    // } else if (name(transfer_memo[0]) == name("tend") || transfer_memo[0] == "dent") {
+    //     check(transfer_memo.size() == 3,
+    //        "memo must be tend:bid_id:asset:asset, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:20.00000000 WICC");
+    //     check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
+
+    //     uint8_t hash[32];
+    //     memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
+    //     checksum256 id = {hash};
+
+    //     asset lot = asset::from_string(transfer_memo[2]);
+    //     asset bid = quantity;
+    //     //asset bid = asset::from_string(transfer_memo[3]);
+
+    //     if(transfer_memo[0] == "tend")
+    //         tend(id, lot, bid, from);
+    //     else
+    //         dent(id, lot, bid, from);
+    // } else if (transfer_memo[0] == "yank") {
+    //     check(transfer_memo.size() == 2,
+    //        "memo must be yank:bid_id, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4");
+    //     check(transfer_memo[1].size() == 64, "bid_id size must be 32 bytes from sha256");
+
+    //     uint8_t hash[32];
+    //     memcpy(&hash, from_hex(transfer_memo[1]).data(), 32);
+    //     checksum256 id = {hash};
+
+    //     auto usr       = from;
+    //     yank(id, usr, quantity);
+    // }
 
 }
 
@@ -80,7 +157,8 @@ void flip::kick(checksum256 id,
                 asset one,
                 name  usr,
                 name  gal,
-                asset tab) {
+                asset tab) 
+{
 
     //require_auth(usr);
     bid_t bid_object;
@@ -109,7 +187,8 @@ void flip::kick(checksum256 id,
 
 }
 
-void flip::tend(checksum256 id, asset lot, asset bid, name guy) {
+void flip::tend(checksum256 id, asset lot, asset bid, name guy) 
+{
 
     //require_auth(guy);
     bid_t bid_object;
@@ -157,7 +236,8 @@ void flip::tend(checksum256 id, asset lot, asset bid, name guy) {
 
 }
 
-void flip::dent(checksum256 id, asset lot, asset bid, name guy) {
+void flip::dent(checksum256 id, asset lot, asset bid, name guy) 
+{
 
     //require_auth(guy);
     bid_t bid_object;
@@ -205,7 +285,8 @@ void flip::dent(checksum256 id, asset lot, asset bid, name guy) {
 
 }
 
-void flip::deal(checksum256 id, name guy) {
+void flip::deal(checksum256 id, name guy) 
+{
     require_auth(guy);
 
     auto now = current_block_time();
@@ -232,7 +313,8 @@ void flip::deal(checksum256 id, name guy) {
     });
 }
 
-void flip::yank(checksum256 id, name usr, asset payback) {
+void flip::yank(checksum256 id, name usr, asset payback) 
+{
     require_auth(usr);
 
     bid_t bid_object;

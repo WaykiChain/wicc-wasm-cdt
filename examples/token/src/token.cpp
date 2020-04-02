@@ -4,7 +4,7 @@
 using namespace wasm;
 //using std::chrono::system_clock;
 
-ACTION token::create( name   issuer,
+ACTION token::create( regid  issuer,
                       asset  maximum_supply )
 {
     require_auth( _self );
@@ -26,7 +26,7 @@ ACTION token::create( name   issuer,
 }
 
 
-ACTION token::issue( name to, asset quantity, string memo )
+ACTION token::issue( regid to, asset quantity, string memo )
 {
     auto sym = quantity.symbol;
     check( sym.is_valid(), "invalid symbol name" );
@@ -77,8 +77,8 @@ ACTION token::retire( asset quantity, string memo )
     sub_balance( st.issuer, quantity );
 }
 
-ACTION token::transfer( name    from,
-                        name    to,
+ACTION token::transfer( regid    from,
+                        regid    to,
                         asset   quantity,
                         string  memo )
 {
@@ -105,7 +105,7 @@ ACTION token::transfer( name    from,
     add_balance( to, quantity, payer );    
 }
 
-void token::sub_balance( name owner, asset value ) {
+void token::sub_balance( regid owner, asset value ) {
    accounts from_acnts( _self, owner.value );
 
    account from;
@@ -117,7 +117,7 @@ void token::sub_balance( name owner, asset value ) {
       });
 }
 
-void token::add_balance( name owner, asset value, name payer )
+void token::add_balance( regid owner, asset value, regid payer )
 {
    accounts to_acnts( _self, owner.value );
 
@@ -134,7 +134,7 @@ void token::add_balance( name owner, asset value, name payer )
    }
 }
 
-ACTION token::open( name owner, const symbol& symbol, name payer )
+ACTION token::open( regid owner, const symbol& symbol, regid payer )
 {
    require_auth( payer );
 
@@ -156,7 +156,7 @@ ACTION token::open( name owner, const symbol& symbol, name payer )
    }
 }
 
-ACTION token::close( name owner, const symbol& symbol )
+ACTION token::close( regid owner, const symbol& symbol )
 {
    require_auth( owner );
    accounts acnts( _self, owner.value );

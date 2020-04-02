@@ -22,10 +22,10 @@ namespace wasm {
       return current_time();
    }
 
-   std::vector<name> get_active_producers() {
+   std::vector<regid> get_active_producers() {
        auto prod_cnt = get_active_producers(nullptr, 0)/8;
-       std::vector<name> active_prods(prod_cnt);
-       get_active_producers((uint64_t*)active_prods.data(), active_prods.size() * sizeof(name));
+       std::vector<regid> active_prods(prod_cnt);
+       get_active_producers((uint64_t*)active_prods.data(), active_prods.size() * sizeof(regid));
        return active_prods;
    }
 
