@@ -16,27 +16,27 @@ static constexpr int64_t  bid_scope = 100;
 CONTRACT flip : public contract {
    public:
       using contract::contract;
-      ACTION transfer( name from, name to, asset quantity, string memo );
-      ACTION deal(checksum256 id, name guy );
+      ACTION transfer( regid from, regid to, asset quantity, string memo );
+      ACTION deal(checksum256 id, regid guy );
 
   private:
      TABLE  bid_t {
         checksum256    id;
 
         asset          bid;
-        name           bid_issuer;//the contract issue the bid asset
+        regid          bid_issuer;//the contract issue the bid asset
         asset          lot;
-        name           lot_issuer;//the contract issue the lot asset
+        regid          lot_issuer;//the contract issue the lot asset
 
-        name           guy;//high bidder
+        regid           guy;//high bidder
         uint64_t       tic;//expiry time in minutes
         uint64_t       end;
 
         asset          beg;//minimum bid increase
         asset          one;//minimum log decrease
 
-        name           usr;//lot's owner
-        name           gal;//receives bid income
+        regid          usr;//lot's owner
+        regid          gal;//receives bid income
         asset          tab;//total wanted
 
         checksum256 primary_key()const { return id; }
@@ -44,17 +44,17 @@ CONTRACT flip : public contract {
 
      void kick( checksum256 id,
                 asset bid,
-                name  bid_issuer,
+                regid bid_issuer,
                 asset lot,
-                name  lot_issuer,
+                regid lot_issuer,
                 asset beg,
                 asset one,
-                name  usr,
-                name  gal,
+                regid usr,
+                regid gal,
                 asset tab);
-     void tend( checksum256 id, asset lot, asset bid, name guy);
-     void dent( checksum256 id, asset lot, asset bid, name guy);
-     void yank( checksum256 id, name usr,  asset payback);
+     void tend( checksum256 id, asset lot, asset bid, regid guy);
+     void dent( checksum256 id, asset lot, asset bid, regid guy);
+     void yank( checksum256 id, regid usr,  asset payback);
 
 
      typedef wasm::table< "bids"_n, bid_t, checksum256 > bids;  	

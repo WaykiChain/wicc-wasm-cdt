@@ -4,8 +4,8 @@
 
 using namespace wasm;
 
-ACTION flip::transfer(name from,
-                      name to,
+ACTION flip::transfer(regid from,
+                      regid to,
                       asset quantity,
                       string memo) 
 {
@@ -13,7 +13,7 @@ ACTION flip::transfer(name from,
 
     vector <string> transfer_memo = string_split(memo, ':');
 
-    uint64_t operate = transfer_memo[0].value;
+    uint64_t operate = name(transfer_memo[0]).value;
     switch(operate)
     {
        case name("kick").value:
@@ -28,7 +28,7 @@ ACTION flip::transfer(name from,
 
         auto tab        = asset::from_string(transfer_memo[2]);
         auto bid        = tab; bid.set_amount(0);
-        auto bid_issuer = name(transfer_memo[3]);        
+        auto bid_issuer = regid(transfer_memo[3]);        
 
         auto lot        = quantity;
         auto lot_issuer = get_first_receiver(); 
@@ -37,7 +37,7 @@ ACTION flip::transfer(name from,
 
         //auto usr        = name(transfer_memo[6]);
         auto usr        = from;
-        auto gal        = name(transfer_memo[6]);
+        auto gal        = regid(transfer_memo[6]);
         //auto tab        = asset::from_string(transfer_memo[8]);
         
         check(bid.symbol == beg.symbol, "not matching beg symbol");
@@ -71,7 +71,7 @@ ACTION flip::transfer(name from,
 
         break;       
        }
-       case name("yank"):
+       case name("yank").value:
        {
            check(transfer_memo.size() == 2,
                 "memo must be yank:bid_id, eg. tend:68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4");
@@ -150,13 +150,13 @@ ACTION flip::transfer(name from,
 
 void flip::kick(checksum256 id,
                 asset bid,
-                name  bid_issuer,
+                regid bid_issuer,
                 asset lot,
-                name  lot_issuer,
+                regid lot_issuer,
                 asset beg,
                 asset one,
-                name  usr,
-                name  gal,
+                regid usr,
+                regid gal,
                 asset tab) 
 {
 
@@ -187,7 +187,7 @@ void flip::kick(checksum256 id,
 
 }
 
-void flip::tend(checksum256 id, asset lot, asset bid, name guy) 
+void flip::tend(checksum256 id, asset lot, asset bid, regid guy) 
 {
 
     //require_auth(guy);
@@ -236,7 +236,7 @@ void flip::tend(checksum256 id, asset lot, asset bid, name guy)
 
 }
 
-void flip::dent(checksum256 id, asset lot, asset bid, name guy) 
+void flip::dent(checksum256 id, asset lot, asset bid, regid guy) 
 {
 
     //require_auth(guy);
@@ -285,7 +285,7 @@ void flip::dent(checksum256 id, asset lot, asset bid, name guy)
 
 }
 
-void flip::deal(checksum256 id, name guy) 
+void flip::deal(checksum256 id, regid guy) 
 {
     require_auth(guy);
 
@@ -313,7 +313,7 @@ void flip::deal(checksum256 id, name guy)
     });
 }
 
-void flip::yank(checksum256 id, name usr, asset payback) 
+void flip::yank(checksum256 id, regid usr, asset payback) 
 {
     require_auth(usr);
 
@@ -357,10 +357,10 @@ extern "C" {
 void apply(uint64_t receiver, uint64_t code, uint64_t action) {
         switch (action) {
             case wasm::name("transfer").value:
-                wasm::execute_action(wasm::name(receiver), wasm::name(code), &flip::transfer);
+                wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &flip::transfer);
                 break;
             case wasm::name("deal").value:
-                wasm::execute_action(wasm::name(receiver), wasm::name(code), &flip::deal);
+                wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &flip::deal);
                 break;
             default:
                 check(false, "action does not exist");
