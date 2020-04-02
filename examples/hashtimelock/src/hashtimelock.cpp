@@ -5,8 +5,8 @@
 using namespace wasm;
 
 
-ACTION hashtimelock::transfer(name from,
-                              name to,
+ACTION hashtimelock::transfer(regid from,
+                              regid to,
                               asset quantity,
                               string memo) {
     if (to != get_self()) return;
@@ -14,10 +14,10 @@ ACTION hashtimelock::transfer(name from,
     std:
     vector <string> transfer_memo = string_split(memo, ':');
     check(transfer_memo.size() == 3,
-          "memo must be hash:name:locktime in seconds, eg. 68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:walker:120");
+          "memo must be hash:regid:locktime in seconds, eg. 68feb6a4097a45d6e56f5b84f6c381b0c638a1306eb95b7ee2354e19838461e4:walker:120");
     check(transfer_memo[0].size() == 64, "lock_hash size must be 32 bytes from sha256");
     checksum256 lock_hash;
-    name unlocker;
+    regid unlocker;
     uint64_t refund_lock_seconds;
 
     uint8_t hash[32];
@@ -25,7 +25,7 @@ ACTION hashtimelock::transfer(name from,
     lock_hash = {hash};
     lock_hash.print();
 
-    unlocker = name(transfer_memo[1]);
+    unlocker = regid(transfer_memo[1]);
     refund_lock_seconds = atoi(transfer_memo[2].c_str());
 
     check(is_account(unlocker), "unlocker does not exist");
@@ -37,7 +37,7 @@ ACTION hashtimelock::transfer(name from,
 }
 
 ACTION hashtimelock::unlock(string key,
-                            name unlocker) {
+                            regid  unlocker) {
     require_auth(unlocker);
 
     checksum256 lock_hash = sha256((const char *) key.data(), key.size());
@@ -63,7 +63,7 @@ ACTION hashtimelock::unlock(string key,
 }
 
 ACTION hashtimelock::refund(string key,
-                            name locker) {
+                            regid  locker) {
 
     require_auth(locker);
 
@@ -90,10 +90,10 @@ ACTION hashtimelock::refund(string key,
 }
 
 void hashtimelock::lock(checksum256 lock_hash,
-                        name locker,
-                        name unlocker,
-                        asset quantity,
-                        uint64_t refund_lock_seconds) {
+                        regid       locker,
+                        regid       unlocker,
+                        asset       quantity,
+                        uint64_t    refund_lock_seconds) {
     require_auth(locker);
 
     hash_time_lock htl;
@@ -101,10 +101,10 @@ void hashtimelock::lock(checksum256 lock_hash,
     check(!htls_table.get(htl, lock_hash), "lock has already exists");
 
     htls_table.emplace(get_self(), [&](auto &s) {
-        s.bank = get_first_receiver();
-        s.lock_hash = lock_hash;
-        s.locker = locker;
-        s.unlocker = unlocker;
+        s.bank            = get_first_receiver();
+        s.lock_hash       = lock_hash;
+        s.locker          = locker;
+        s.unlocker        = unlocker;
         s.locked_quantity = quantity;
         s.locked_block_time = current_block_time();
         s.refund_lock_seconds = refund_lock_seconds;
@@ -122,13 +122,13 @@ extern "C" {
 void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     switch (action) {
         case wasm::name("transfer").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &hashtimelock::transfer);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &hashtimelock::transfer);
             break;
         case wasm::name("unlock").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &hashtimelock::unlock);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &hashtimelock::unlock);
             break;
         case wasm::name("refund").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &hashtimelock::refund);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &hashtimelock::refund);
             break;
         default:
             check(false, "action does not exist");
