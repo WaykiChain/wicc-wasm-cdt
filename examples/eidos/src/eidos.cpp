@@ -54,7 +54,7 @@ ACTION eidos::issue( regid to, asset quantity, string memo )
     add_balance( st.issuer, quantity, st.issuer );
 
     if( to != st.issuer ) {
-      wasm::transaction inline_trx(get_self(), name("transfer"), std::vector<permission>{{st.issuer, name("wasmio.owner")}}, std::tuple(st.issuer, to, quantity, memo));
+      wasm::transaction inline_trx(get_self(), name("transfer"), std::vector<permission>{{st.issuer, name("wasmio.code")}}, std::tuple(st.issuer, to, quantity, memo));
       inline_trx.send();
     }
 }
@@ -89,30 +89,31 @@ ACTION eidos::transfer( regid   from,
 
     if( to == get_self() &&  wasmio_bank == get_first_receiver() ){
        print("1.inline wasmio.bank transfer:", quantity.to_string(),"\n");
-       wasm::transaction inline_trx(wasmio_bank, name("transfer"), std::vector<permission>{{to, name("wasmio.owner")}}, std::tuple(to, from, quantity, memo));
+       wasm::transaction inline_trx(wasmio_bank, name("transfer"), std::vector<permission>{{to, name("wasmio.code")}}, std::tuple(to, from, quantity, memo));
        inline_trx.send();
 
        print("2.token.transfer check_balance\n");
        accounts to_acnts( _self, to.value );
        account contract_self;
-       check(to_acnts.get( contract_self, quantity.symbol.code().raw()),"no balance object found" );
-       if (contract_self.balance.amount < quantity.amount ){
+       //check(to_acnts.get( contract_self, quantity.symbol.code().raw()),"no balance object found" );
+       bool first_issue = to_acnts.get( contract_self, quantity.symbol.code().raw());
+       if (first_issue || contract_self.balance.amount < quantity.amount ){
 
             asset quantity_issue = quantity;
             quantity_issue.amount += 2500000000;
             print("3.issue new token:",quantity_issue.to_string());
-            wasm::transaction inline_trx_issue(get_self(), name("issue"), std::vector<permission>{{to, name("wasmio.owner")}}, std::tuple(to, quantity_issue, string("issue new 25")));
+            wasm::transaction inline_trx_issue(get_self(), name("issue"), std::vector<permission>{{to, name("wasmio.code")}}, std::tuple(to, quantity_issue, string("issue new 25")));
             inline_trx_issue.send();
        }
 
        print("4.inline ",get_self().to_string()," transfer:",quantity.to_string());
-       wasm::transaction inline_trx2(get_self(), name("transfer"), std::vector<permission>{{to, name("wasmio.owner")}}, std::tuple(to, from, quantity, memo));
+       wasm::transaction inline_trx2(get_self(), name("transfer"), std::vector<permission>{{to, name("wasmio.code")}}, std::tuple(to, from, quantity, memo));
        inline_trx2.send();
     }
 
     if(wasmio_bank== get_first_receiver()) return;
 
-    print("5.from:",from, " to:", to, " quantity:",quantity.to_string()," memo:", memo);
+    print("5.from:",from, " to:", to, " quantity:", quantity.to_string()," memo:", memo);
 
     check( from != to, "cannot transfer to self" );
     require_auth( from );
