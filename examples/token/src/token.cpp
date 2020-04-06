@@ -91,8 +91,8 @@ ACTION token::transfer( regid    from,
     stats statstable( _self, sym.raw() );
     statstable.get( st, sym.raw() );
 
-    require_recipient( from );
-    require_recipient( to );
+    notify_recipient( from );
+    notify_recipient( to );
 
     check( quantity.is_valid(), "invalid quantity" );
     check( quantity.amount > 0, "must transfer positive quantity" );

@@ -5,7 +5,7 @@
 using namespace wasm;
 
 
-ACTION msig::propose(name proposer, name proposal_name, file_t file){
+ACTION msig::propose(regid proposer, name proposal_name, file_t file){
     require_auth(proposer);
 
     proposal_t proposal_object;
@@ -34,7 +34,7 @@ ACTION msig::propose(name proposer, name proposal_name, file_t file){
 
 }
 
-ACTION msig::approve(name proposer, name proposal_name, name approver){
+ACTION msig::approve(regid proposer, name proposal_name, regid approver){
     require_auth(approver);
 
     admin_t admin_object;
@@ -69,7 +69,7 @@ ACTION msig::approve(name proposer, name proposal_name, name approver){
 
 // }
 
-ACTION msig::exec( name proposer, name proposal_name, name executer ){
+ACTION msig::exec( regid proposer, name proposal_name, regid executer ){
     require_auth( executer );
 
     approvals_info_t approvals_info_object;
@@ -114,7 +114,7 @@ ACTION msig::setthreshold(name file, uint64_t threshold){
     }
 }
 
-ACTION msig::setadmin(name admin, uint64_t weight){
+ACTION msig::setadmin(regid admin, uint64_t weight){
     require_auth(get_self());
 
     admin_t admin_object;
@@ -145,22 +145,22 @@ extern "C" {
 void apply(uint64_t receiver, uint64_t code, uint64_t action) {
     switch (action) {
         case wasm::name("propose").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::propose);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &msig::propose);
             break;
         case wasm::name("approve").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::approve);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &msig::approve);
             break;
         // case wasm::name("unapprove").value:
         //     wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::unapprove);
         //     break;
         case wasm::name("exec").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::exec);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &msig::exec);
             break;
         case wasm::name("setthreshold").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::setthreshold);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &msig::setthreshold);
             break;
         case wasm::name("setadmin").value:
-            wasm::execute_action(wasm::name(receiver), wasm::name(code), &msig::setadmin);
+            wasm::execute_action(wasm::regid(receiver), wasm::regid(code), &msig::setadmin);
             break;
         default:
             check(false, "action does not exist");

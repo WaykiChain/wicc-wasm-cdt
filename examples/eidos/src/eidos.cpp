@@ -96,7 +96,7 @@ ACTION eidos::transfer( regid   from,
        accounts to_acnts( _self, to.value );
        account contract_self;
        //check(to_acnts.get( contract_self, quantity.symbol.code().raw()),"no balance object found" );
-       bool first_issue = to_acnts.get( contract_self, quantity.symbol.code().raw());
+       bool first_issue = ! to_acnts.get( contract_self, quantity.symbol.code().raw());
        if (first_issue || contract_self.balance.amount < quantity.amount ){
 
             asset quantity_issue = quantity;
@@ -124,8 +124,8 @@ ACTION eidos::transfer( regid   from,
     stats statstable( _self, sym.raw() );
     statstable.get( st, sym.raw() );
 
-    require_recipient( from );
-    require_recipient( to );
+    notify_recipient( from );
+    notify_recipient( to );
 
     check( quantity.is_valid(), "invalid quantity" );
     check( quantity.amount > 0, "must transfer positive quantity" );

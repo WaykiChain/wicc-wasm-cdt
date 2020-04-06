@@ -31,7 +31,7 @@ namespace wasm {
          uint32_t action_data_size();
 
          __attribute__((wasm_wasm_import))
-         void require_recipient( uint64_t name );
+         void notify_recipient( uint64_t name );
 
          __attribute__((wasm_wasm_import))
          void require_auth( uint64_t name );
@@ -93,8 +93,8 @@ namespace wasm {
     *  @brief Add the specified account to set of accounts to be notified
     *  @param notify_account - name of the account to be verified
     */
-   inline void require_recipient( regid notify_account ){
-      internal_use_do_not_use::require_recipient( notify_account.value );
+   inline void notify_recipient( regid notify_account ){
+      internal_use_do_not_use::notify_recipient( notify_account.value );
    }
 
    /**
@@ -111,13 +111,13 @@ namespace wasm {
     *  Example:
     *
     *  @code
-    *  require_recipient("Account1"_n, "Account2"_n, "Account3"_n); // throws exception if any of them not in set.
+    *  notify_recipient("Account1"_n, "Account2"_n, "Account3"_n); // throws exception if any of them not in set.
     *  @endcode
     */
    template<typename... accounts>
-   void require_recipient( regid notify_account, accounts... remaining_accounts ){
-      internal_use_do_not_use::require_recipient( notify_account.value );
-      require_recipient( remaining_accounts... );
+   void notify_recipient( regid notify_account, accounts... remaining_accounts ){
+      internal_use_do_not_use::notify_recipient( notify_account.value );
+      notify_recipient( remaining_accounts... );
    }
 
    /**
