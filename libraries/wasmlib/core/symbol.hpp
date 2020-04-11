@@ -18,23 +18,19 @@
 namespace wasm {
 
 
-    // inline string ltrim( const string &str ) {
-    //     int h = 0, t = str.size();
-    //     while (h < t && (str[h] == ' ' || str[h] == '\t')) h++;
-    //     return str.substr(h, t - h);
-    // }
 
-    // inline string rtrim( const string &str ) {
-    //     int h = 0, t = str.size();
-    //     while (h < t && (str[t - 1] == ' ' || str[t - 1] == '\t')) t--;
-    //     return str.substr(h, t - h);
-    // }
 
-    // inline string trim( const string &s ) {
-    //     string str = s;
-    //     ltrim(rtrim(str));
-    //     return str;
-    // }
+    static constexpr uint64_t string_to_symbol_code( const char *str ) {
+        uint64_t symbol_code = 0;
+        int i = 0;
+        for (; str[i] && i < 7; ++i) {
+            symbol_code <<= 8;
+            symbol_code |= str[i];
+        }       
+        
+        return symbol_code;
+    }
+
     
   /**
    *  @defgroup symbol Symbol
@@ -55,6 +51,7 @@ namespace wasm {
 
     }
 
+  #define SYMBOL_CODE( X ) string_to_symbol_code(#X)
 
    /**
     *  Stores the symbol code as a uint64_t value
