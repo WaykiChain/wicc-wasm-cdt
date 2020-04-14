@@ -23,7 +23,9 @@ namespace wasm {
     static constexpr uint64_t string_to_symbol_code( const char *str ) {
         uint64_t symbol_code = 0;
         int i = 0;
-        for (; str[i] && i < 7; ++i) {
+        while (str[i]) i++;
+
+        for (; i >= 0; i--) {
             symbol_code <<= 8;
             symbol_code |= str[i];
         }       
@@ -46,6 +48,8 @@ namespace wasm {
         if( c == '@' ) return true;
         if( c == '.' ) return true;
         if( c == '#' ) return true;
+
+        print(c);
 
         return false;
 
