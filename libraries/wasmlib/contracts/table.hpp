@@ -18,6 +18,9 @@ template<name::raw TableName, typename T, typename PrimaryKeyType>
 class table
 {
 public:
+	typedef T object_type;
+	
+public:
 	table( regid code, uint64_t scope )
 	:_code(code),_scope(scope)
 	//:_scope(scope)
