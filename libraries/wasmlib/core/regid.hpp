@@ -11,8 +11,8 @@ namespace wasm {
     //for account identity in wasm
     struct regid {
     public:
-        enum class raw : uint64_t {
-        };
+        // enum class raw : uint64_t {
+        // };
 
         /**
          * Construct a new regid
@@ -39,8 +39,8 @@ namespace wasm {
          * @param r - The raw value which is a scoped enumerated type of unit64_t
          *
          */
-        constexpr explicit regid( regid::raw r )
-                : value(static_cast<uint64_t>(r)) {}
+        // constexpr explicit regid( regid::raw r )
+        //         : value(static_cast<uint64_t>(r)) {}
 
         /**
          * Construct a new regid given an string.
@@ -69,7 +69,7 @@ namespace wasm {
          *
          * @return Returns an instance of raw based on the value of a regid
          */
-        constexpr operator raw() const { return raw(value); }
+        // constexpr operator raw() const { return raw(value); }
 
         /**
          * Explicit cast to bool of the uint64_t value of the regid
@@ -133,6 +133,9 @@ namespace wasm {
 
         uint64_t value = 0;
 
+
+        WASMLIB_SERIALIZE( regid, (value) )
+
         /**  Serialize a symbol_code into a stream
         *
         *  @brief Serialize a symbol_code
@@ -141,12 +144,12 @@ namespace wasm {
         *  @tparam DataStream - Type of datastream buffer
         *  @return DataStream& - Reference to the datastream
         */
-        template<typename DataStream>
-        friend inline DataStream &operator<<( DataStream &ds, const wasm::regid &regid ) {
-            uint64_t raw = regid.value;
-            ds.write((const char *) &raw, sizeof(uint64_t));
-            return ds;
-        }
+        // template<typename DataStream>
+        // friend inline DataStream &operator<<( DataStream &ds, const wasm::regid &regid ) {
+        //     uint64_t raw = regid.value;
+        //     ds.write((const char *) &raw, sizeof(uint64_t));
+        //     return ds;
+        // }
 
         /**
         *  Deserialize a symbol_code from a stream
@@ -157,13 +160,13 @@ namespace wasm {
         *  @tparam DataStream - Type of datastream buffer
         *  @return DataStream& - Reference to the datastream
         */
-        template<typename DataStream>
-        friend inline DataStream &operator>>( DataStream &ds, wasm::regid &regid ) {
-            uint64_t raw = 0;
-            ds.read((char *) &raw, sizeof(uint64_t));
-            regid.value = raw;
-            return ds;
-        }
+        // template<typename DataStream>
+        // friend inline DataStream &operator>>( DataStream &ds, wasm::regid &regid ) {
+        //     uint64_t raw = 0;
+        //     ds.read((char *) &raw, sizeof(uint64_t));
+        //     regid.value = raw;
+        //     return ds;
+        // }
 
     };
 
