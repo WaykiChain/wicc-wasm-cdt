@@ -289,10 +289,11 @@ struct generation_utils {
                if ( names.empty() ) {
                   return true;
                } else {
-                  for ( auto name : names )
+                  for ( auto name : names ){
                      if ( rt->getDecl()->getName().str() == name ) {
                         return true;
                      }
+                  }
                }
             }
          }
@@ -477,6 +478,11 @@ struct generation_utils {
          auto t1 = translate_type(get_template_argument( type, 1).getAsType());
          return replace_in_name("pair_" + t0 + "_" + t1);
       }
+      else if ( is_template_specialization( type, {"array"} )) {
+         auto t0 = translate_type(get_template_argument( type ).getAsType());
+         auto t1 = translate_type(get_template_argument( type, 1).getAsType());
+         return replace_in_name(t0 + t1);
+      }
       else if ( is_template_specialization( type, {"tuple"} )) {
          auto pt = llvm::dyn_cast<clang::ElaboratedType>(type.getTypePtr());
          auto tst = llvm::dyn_cast<clang::TemplateSpecializationType>( pt ? pt->desugar().getTypePtr() : type.getTypePtr() );
@@ -509,6 +515,7 @@ struct generation_utils {
          }
          return _translate_type(replace_in_name(ret));
       }
+
       return _translate_type( type );
    }
 

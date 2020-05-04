@@ -49,7 +49,7 @@ namespace wasm {
         if( c == '.' ) return true;
         if( c == '#' ) return true;
 
-        print(c);
+        //print(c);
 
         return false;
 
