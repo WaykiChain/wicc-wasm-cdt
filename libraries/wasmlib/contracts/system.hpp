@@ -58,6 +58,15 @@ namespace wasm {
    */
    wasm::checksum256 get_txid();
 
+
+   /**
+   *  Returns the maintainer of this contract
+   *
+   *  @ingroup system
+   *  @return the mantainer of this contract
+   */
+   uint64_t get_contract_maintainer(uint64_t contract);
+
   /**
    *  Returns the txid in hash from 1970 of the current txid
    *

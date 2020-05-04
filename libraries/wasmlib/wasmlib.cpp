@@ -13,6 +13,9 @@ namespace wasm {
      __attribute__((wasm_wasm_import))
      uint32_t get_txid(void*, uint32_t);
 
+        __attribute__((wasm_wasm_import))
+     uint64_t get_maintainer(uint64_t);
+
      __attribute__((wasm_wasm_import))
      uint32_t get_system_asset_price(uint64_t, uint64_t, void*, uint32_t);
 
@@ -33,6 +36,11 @@ namespace wasm {
       uint8_t hash[32];
       get_txid(hash, 32);
       return {hash};
+  }
+
+
+  uint64_t get_contract_maintainer(uint64_t contract){
+     return get_maintainer(contract);
   }
 
   wasm::asset get_system_asset_price(symbol base, symbol quote){
