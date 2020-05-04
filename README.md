@@ -7,7 +7,7 @@ WASM.CDT is a toolchain for WebAssembly (WASM) and set of tools to facilitate co
 ### Guided Installation (Building from source code)
 ```sh
 $ git clone --recursive git@github.com:WaykiChain/wicc-wasm-cdt.git
-$ cd wasm.cdt
+$ cd wicc-wasm-cdt
 $ ./build.sh
 $ sudo ./install.sh
 ```
