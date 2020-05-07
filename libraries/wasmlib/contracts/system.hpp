@@ -7,6 +7,7 @@
 #include "../core/check.hpp"
 #include "../core/asset.hpp"
 #include "../core/symbol.hpp"
+#include "../core/regid.hpp"
 
 namespace wasm {
   namespace internal_use_do_not_use {
