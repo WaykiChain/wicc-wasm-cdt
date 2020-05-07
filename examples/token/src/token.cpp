@@ -8,7 +8,7 @@ ACTION token::create( regid  issuer,
                       asset  maximum_supply )
 {
     require_auth( issuer );
-    auto maintainer = wasm::regid(get_contract_maintainer(_self.value));
+    auto maintainer = get_maintainer(_self);
     check( issuer == maintainer, "issuer not contract maintainer");
 
     auto sym = maximum_supply.symbol;

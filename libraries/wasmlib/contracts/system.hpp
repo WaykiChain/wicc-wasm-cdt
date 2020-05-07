@@ -65,7 +65,7 @@ namespace wasm {
    *  @ingroup system
    *  @return the mantainer of this contract
    */
-   uint64_t get_contract_maintainer(uint64_t contract);
+   wasm::regid get_maintainer(wasm::regid contract);
 
   /**
    *  Returns the txid in hash from 1970 of the current txid

@@ -39,8 +39,8 @@ namespace wasm {
   }
 
 
-  uint64_t get_contract_maintainer(uint64_t contract){
-     return get_maintainer(contract);
+  wasm::regid get_maintainer(wasm::regid contract){
+     return wasm::regid(get_maintainer(contract.value));
   }
 
   wasm::asset get_system_asset_price(symbol base, symbol quote){
@@ -48,7 +48,7 @@ namespace wasm {
       if( size == 0 ) return {};
 
       std::vector<char> bytes(size);
-      get_system_asset_price(base.raw(), quote.raw(), bytes.data(), size);   
+      get_system_asset_price(base.raw(), quote.raw(), bytes.data(), size);
 
       return wasm::unpack<wasm::asset>(bytes);
   }
