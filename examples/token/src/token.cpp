@@ -7,7 +7,9 @@ using namespace wasm;
 ACTION token::create( regid  issuer,
                       asset  maximum_supply )
 {
-    require_auth( _self );
+    require_auth( issuer );
+    auto maintainer = wasm::regid(get_contract_maintainer(_self.value));
+    check( issuer == maintainer, "issuer not contract maintainer");
 
     auto sym = maximum_supply.symbol;
     check( sym.is_valid(), "invalid symbol name" );
@@ -102,7 +104,7 @@ ACTION token::transfer( regid    from,
     auto payer = has_auth( to ) ? to : from;
 
     sub_balance( from, quantity );
-    add_balance( to, quantity, payer );    
+    add_balance( to, quantity, payer );
 }
 
 void token::sub_balance( regid owner, asset value ) {
@@ -168,5 +170,3 @@ ACTION token::close( regid owner, const symbol& symbol )
 }
 
 WASM_DISPATCH( token, (create)(issue)(retire)(transfer)(open)(close))
-
-
