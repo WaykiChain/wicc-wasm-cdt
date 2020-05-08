@@ -11,7 +11,7 @@ namespace wasm {
      uint32_t get_active_producers(uint64_t*, uint32_t);
 
      __attribute__((wasm_wasm_import))
-     uint32_t get_txid(void*, uint32_t);
+     uint32_t get_txid(void*);
 
         __attribute__((wasm_wasm_import))
      uint64_t get_maintainer(uint64_t);
