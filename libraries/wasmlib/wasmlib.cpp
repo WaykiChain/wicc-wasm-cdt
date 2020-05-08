@@ -34,7 +34,7 @@ namespace wasm {
 
   wasm::checksum256 get_txid(){
       uint8_t hash[32];
-      get_txid(hash, 32);
+      get_txid(hash);
       return {hash};
   }
 
