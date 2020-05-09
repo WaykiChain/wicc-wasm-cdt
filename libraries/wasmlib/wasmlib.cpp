@@ -32,11 +32,10 @@ namespace wasm {
        return active_prods;
    }
 
-  wasm::hash256 get_txid(){
+    wasm::hash256 get_txid(){
       uint8_t hash[32];
       get_txid(hash);
       return wasm::hash256(hash);
-
   }
 
 
