@@ -8,6 +8,7 @@
 #include "../core/asset.hpp"
 #include "../core/symbol.hpp"
 #include "../core/regid.hpp"
+#include "../core/hash256.hpp"
 
 namespace wasm {
   namespace internal_use_do_not_use {
@@ -57,7 +58,7 @@ namespace wasm {
    *  @ingroup system
    *  @return time the txid in hash of the current txid
    */
-   wasm::checksum256 get_txid();
+   wasm::hash256 get_txid();
 
 
    /**

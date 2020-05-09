@@ -476,6 +476,7 @@ struct generation_utils {
       else if ( is_template_specialization( type, {"pair"} )) {
          auto t0 = translate_type(get_template_argument( type ).getAsType());
          auto t1 = translate_type(get_template_argument( type, 1).getAsType());
+
          return replace_in_name("pair_" + t0 + "_" + t1);
       }
       else if ( is_template_specialization( type, {"array"} )) {
@@ -555,7 +556,8 @@ struct generation_utils {
          "symbol",
          "symbol_code",
          "asset",
-         "extended_asset"
+         "extended_asset",
+         "hash256",
       };
       return builtins.count(_translate_type(t)) >= 1;
    }

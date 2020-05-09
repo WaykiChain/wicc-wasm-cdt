@@ -11,7 +11,7 @@ namespace wasm {
      uint32_t get_active_producers(uint64_t*, uint32_t);
 
      __attribute__((wasm_wasm_import))
-     uint32_t get_txid(void*, uint32_t);
+     uint32_t get_txid(void*);
 
         __attribute__((wasm_wasm_import))
      uint64_t get_maintainer(uint64_t);
@@ -32,10 +32,11 @@ namespace wasm {
        return active_prods;
    }
 
-  wasm::checksum256 get_txid(){
+  wasm::hash256 get_txid(){
       uint8_t hash[32];
-      get_txid(hash, 32);
-      return {hash};
+      get_txid(hash);
+      return wasm::hash256(hash);
+
   }
 
 

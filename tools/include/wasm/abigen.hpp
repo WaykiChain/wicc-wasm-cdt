@@ -176,16 +176,6 @@ namespace wasmcdt { namespace cdt {
                sub_name += "_" + get_type(field->getType());
                add_type(field->getType());
             }
-
-            //xiaoyu 20200421 for fixed length array
-            // if(decl->getName().str() == "account_issuance_ledger_t"){
-            //    std::cout<< field->getType().getAsString()<<std::endl;
-            //    if (auto tst = llvm::dyn_cast<clang::TemplateSpecializationType>(field->getType().getTypePtr())) {
-            //       if (auto rt = llvm::dyn_cast<clang::RecordType>(tst->desugar())) {
-            //          std::cout << rt->getDecl()->getName().str() << std::endl;
-            //       }
-            //    } 
-            // }
          }
          if (!rname.empty())
             ret.name = rname;

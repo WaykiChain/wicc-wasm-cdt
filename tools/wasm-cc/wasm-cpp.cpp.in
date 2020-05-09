@@ -160,6 +160,7 @@ void generate(const std::vector<std::string>& base_options, std::string input, s
    if (tool_run != 0) {
       throw std::runtime_error("abigen error");
    }
+
    std::string abi_s;
    if (get_abigen_ref().is_empty())
       return;
@@ -192,10 +193,10 @@ int main(int argc, const char **argv) {
    cl::ParseCommandLineOptions(argc, argv, std::string(COMPILER_NAME)+" (Wasm C++ -> WebAssembly compiler)");
    Options opts = CreateOptions();
 
-//   std::cout << opts.abigen_contract ;
-//   for ( auto s: opts.abigen_resources )
-//       std::cout <<" " << s;
-//   std::cout << std::endl;
+  // std::cout << opts.abigen_contract ;
+  // for ( auto s: opts.abigen_resources )
+  //     std::cout <<" " << s;
+  // std::cout << std::endl;
 
    std::vector<std::string> outputs;
    try {
@@ -205,8 +206,6 @@ int main(int argc, const char **argv) {
          llvm::sys::path::system_temp_directory(true, res);
          std::string tmp_file = std::string(res.c_str())+"/"+llvm::sys::path::filename(input).str();
          std::string output;
-
-         //std::cout << input << std::endl;
 
          generate(opts.comp_options, input, opts.abigen_contract, opts.abigen_resources, opts.abigen);
 
