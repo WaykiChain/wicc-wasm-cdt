@@ -104,8 +104,21 @@ namespace wasm {
        *  @param c - Character to be converted
        *  @return constexpr char - Converted value
        */
+      // static constexpr uint8_t char_to_value( char c ) {
+      //    if( c == '.')
+      //       return 0;
+      //    else if( c >= '1' && c <= '5' )
+      //       return (c - '1') + 1;
+      //    else if( c >= 'a' && c <= 'z' )
+      //       return (c - 'a') + 6;
+      //    else
+      //       wasm::check( false, "character is not in allowed character set for names" );
+
+      //    return 0; // control flow will never reach here; just added to suppress warning
+      // }
+
       static constexpr uint8_t char_to_value( char c ) {
-         if( c == '.')
+         if( c == '_')
             return 0;
          else if( c >= '1' && c <= '5' )
             return (c - '1') + 1;
@@ -195,7 +208,7 @@ namespace wasm {
        *  @post If the Appropriate Size Precondition is satisfied, the range [begin, returned pointer) contains the string representation of the %name.
        */
       char* write_as_string( char* begin, char* end )const {
-         static const char* charmap = ".12345abcdefghijklmnopqrstuvwxyz";
+         static const char* charmap = "_12345abcdefghijklmnopqrstuvwxyz";
          constexpr uint64_t mask = 0xF800000000000000ull;
 
          if( (begin + 13) < begin || (begin + 13) > end ) return begin;

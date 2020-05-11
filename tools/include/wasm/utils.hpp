@@ -53,8 +53,8 @@ void validate_name( const std::string& str, Lambda&& error_handler ) {
    }
    uint64_t value = string_to_name( str.c_str() );
 
-   static const char* charmap = ".12345abcdefghijklmnopqrstuvwxyz";
-   std::string str2(13,'.');
+   static const char* charmap = "_12345abcdefghijklmnopqrstuvwxyz";
+   std::string str2(13,'_');
 
    uint64_t tmp = value;
    for( uint32_t i = 0; i <= 12; ++i ) {
@@ -66,7 +66,7 @@ void validate_name( const std::string& str, Lambda&& error_handler ) {
    auto trim = [](std::string& s) {
       int i;
       for (i = s.length()-1; i >= 0; i--)
-         if (s[i] != '.')
+         if (s[i] != '_')
             break;
       s = s.substr(0,i+1);
    };
@@ -79,8 +79,8 @@ void validate_name( const std::string& str, Lambda&& error_handler ) {
 }
 
 std::string name_to_string( uint64_t nm ) {
-   static const char* charmap = ".12345abcdefghijklmnopqrstuvwxyz";
-   std::string str(13,'.');
+   static const char* charmap = "_12345abcdefghijklmnopqrstuvwxyz";
+   std::string str(13,'_');
 
    uint64_t tmp = nm;
    for( uint32_t i = 0; i <= 12; ++i ) {
