@@ -90,7 +90,7 @@ std::string name_to_string( uint64_t nm ) {
    }
 
    auto trim_right_dots = [](std::string& str) {
-      const auto last = str.find_last_not_of('.');
+      const auto last = str.find_last_not_of('_');
       if (last != std::string::npos)
          str = str.substr(0, last+1);
    };
