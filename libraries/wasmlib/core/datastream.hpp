@@ -497,12 +497,9 @@ DataStream& operator << ( DataStream& ds, const std::string& v ) {
  */
 template<typename DataStream>
 DataStream& operator >> ( DataStream& ds, std::string& v ) {
-   std::vector<char> tmp;
-   ds >> tmp;
-   if( tmp.size() )
-      v = std::string(tmp.data(),tmp.data()+tmp.size());
-   else
-      v = std::string();
+   unsigned_int s;
+   ds >> s;
+   ds.read(v.data(), v.size());
    return ds;
 }
 
