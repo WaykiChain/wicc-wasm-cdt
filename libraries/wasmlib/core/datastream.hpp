@@ -499,6 +499,7 @@ template<typename DataStream>
 DataStream& operator >> ( DataStream& ds, std::string& v ) {
    unsigned_int s;
    ds >> s;
+   v.resize(s, '0');
    ds.read(v.data(), v.size());
    return ds;
 }
