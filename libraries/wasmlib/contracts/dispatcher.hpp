@@ -88,4 +88,15 @@ extern "C" { \
    } \
 } \
 
+#define WASM_DISPATCH_ANY( TYPE, MEMBERS ) \
+extern "C" { \
+   [[wasm::wasm_entry]] \
+   void apply( uint64_t receiver, uint64_t code, uint64_t action ) { \
+         switch( action ) { \
+            WASM_DISPATCH_HELPER( TYPE, MEMBERS ) \
+         } \
+         /* does not allow destructor of thiscontract to run: wasm_exit(0); */ \
+   } \
+} \
+
 }
