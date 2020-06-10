@@ -1,6 +1,7 @@
 #include "core/datastream.hpp"
 #include "contracts/system.hpp"
 #include "contracts/privileged.hpp"
+#include "rpc/rpc.hpp"
 
 namespace wasm {
    extern "C" {
@@ -19,6 +20,8 @@ namespace wasm {
      __attribute__((wasm_wasm_import))
      uint32_t get_system_asset_price(uint64_t, uint64_t, void*, uint32_t);
 
+     __attribute__((wasm_wasm_import))
+     void set_rpc_result(const uint64_t &name, const char *value, uint32_t value_len);
    }
 
    uint64_t current_block_time() {
@@ -54,6 +57,9 @@ namespace wasm {
   }
 
 
+   void set_rpc_result(const uint64_t &name, const std::vector<char> &value) {
+      set_rpc_result(name, value.data(), value.size());
+   }
 
 
 } // namespace wasm

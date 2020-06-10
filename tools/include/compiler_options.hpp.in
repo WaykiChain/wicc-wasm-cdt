@@ -543,8 +543,8 @@ static Options CreateOptions(bool add_defaults=true) {
       GetLdDefaults(ldopts);
 #endif
    }
-  
-#ifndef ONLY_LD 
+
+#ifndef ONLY_LD
    if (fquery_opt)
       ldopts.emplace_back("-fquery");
    if (fquery_server_opt)
@@ -595,6 +595,7 @@ static Options CreateOptions(bool add_defaults=true) {
       copts.emplace_back("-I"+sysroot_opt+"/include/wasmlib/capi");
       copts.emplace_back("-I"+sysroot_opt+"/include/wasmlib/core");
       copts.emplace_back("-I"+sysroot_opt+"/include/wasmlib/contracts");
+      copts.emplace_back("-I"+sysroot_opt+"/include/wasmlib/rpc");
 
       ldopts.emplace_back("-L"+sysroot_opt+"/lib");
 #ifndef __APPLE__
@@ -615,6 +616,7 @@ static Options CreateOptions(bool add_defaults=true) {
       copts.emplace_back("-I"+wasm::cdt::whereami::where()+"/../include/wasmlib/capi");
       copts.emplace_back("-I"+wasm::cdt::whereami::where()+"/../include/wasmlib/core");
       copts.emplace_back("-I"+wasm::cdt::whereami::where()+"/../include/wasmlib/contracts");
+      copts.emplace_back("-I"+wasm::cdt::whereami::where()+"/../include/wasmlib/rpc");
 
 #ifndef __APPLE__
       ldopts.emplace_back("-L"+wasm::cdt::whereami::where()+"/../lib64");
@@ -834,7 +836,7 @@ static Options CreateOptions(bool add_defaults=true) {
          ldopts.emplace_back("a.out");
       }
 #endif
-      if (inputs.size() == 1) {      
+      if (inputs.size() == 1) {
          llvm::SmallString<256> fn = llvm::sys::path::filename(inputs[0]);
          llvm::sys::path::replace_extension(fn, ".wasm");
          ldopts.emplace_back("-o "+output_fn);
