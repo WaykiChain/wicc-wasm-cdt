@@ -33,7 +33,7 @@ public:
 private:
     void add_balance( regid id, asset value);
 private:
-    struct TABLE_IN_CONTRACT account_t {
+    struct TABLE_IN_CONTRACT account {
         regid id;
         asset balance;
 
@@ -41,7 +41,7 @@ private:
     };
 
     //                  name          value       scope=account.id
-    typedef wasm::table<"accounts"_n, account_t, uint64_t> accounts;
+    typedef wasm::table<"accounts"_n, account, uint64_t> accounts;
 };
 
 } // namespace wasm

@@ -31,7 +31,7 @@ ACTION rpc::recharge(regid from, regid to, asset quantity, string memo) {
 ACTION rpc::get_balance(regid id, symbol_code sym) {
 
     accounts accts(_self, id.value);
-    account_t acct;
+    account acct;
     uint64_t balance = 0;
     if (accts.get(acct, sym.raw())) {
         balance = acct.balance.amount;
@@ -55,7 +55,7 @@ ACTION rpc::get_balance(regid id, symbol_code sym) {
 void rpc::add_balance(regid id, asset value) {
     accounts accts(_self, id.value);
 
-    account_t acct;
+    account acct;
     if (!accts.get(acct, value.symbol.code().raw())) {
         accts.emplace(id, [&](auto &a) {
             a.id      = id;
