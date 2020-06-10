@@ -8,7 +8,7 @@ const regid BANK_DEFAULT = regid(string_view("0-800"));
 
 ACTION rpc::transfer(regid from, regid to, asset quantity, string memo) {
 
-    check( get_first_receiver() == BANK_DEFAULT, "must transfer by bank=" + BANK_DEFAULT.to_string() );
+//    check( get_first_receiver() == BANK_DEFAULT, "must transfer by bank=" + BANK_DEFAULT.to_string() );
     check(from != to, "cannot transfer to self");
     check(to == _self, "can transfer to contract self only for recharge");
     require_auth(from);
@@ -28,6 +28,7 @@ ACTION rpc::transfer(regid from, regid to, asset quantity, string memo) {
     check( memo.size() <= 256, "memo has more than 256 bytes" );
 
     //  auto payer = has_auth( to ) ? to : from;
+    print("recharge from=%s", from.to_string());
 
     // recharge
     add_balance(to, quantity);
@@ -66,8 +67,10 @@ void rpc::add_balance(const regid &id, const asset &value) {
             a.id      = id;
             a.balance = value;
         });
+        print("add balance of ", value.to_string(), " to new account=", id.to_string());
     } else {
         accts.modify(acct, wasm::no_payer, [&](auto &a) { a.balance += value; });
+        print("add balance of ", value.to_string(), " to existed account=", id.to_string());
     }
 }
 
