@@ -18,7 +18,7 @@ CONTRACT rpc : public contract {
 public:
     using contract::contract;
 
-    ACTION recharge(regid from, regid to, asset quantity, string memo);
+    ACTION transfer(regid from, regid to, asset quantity, string memo);
 
     // static asset get_balance(regid rpc_contract_account, regid owner, symbol_code sym_code) {
     //     accounts accountstable(rpc_contract_account, owner.value);
@@ -31,7 +31,7 @@ public:
     // RPC
     ACTION get_balance(regid id, symbol_code sym);
 private:
-    void add_balance( regid id, asset value);
+    void add_balance(const regid &id, const asset &value);
 private:
     struct TABLE_IN_CONTRACT account {
         regid id;

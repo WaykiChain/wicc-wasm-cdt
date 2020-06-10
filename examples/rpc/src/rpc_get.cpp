@@ -4,9 +4,13 @@
 using namespace wasm;
 // using std::chrono::system_clock;
 
-ACTION rpc::recharge(regid from, regid to, asset quantity, string memo) {
+const regid BANK_DEFAULT = regid(string_view("0-800"));
 
-    check(from != to, "cannot recharge to self");
+ACTION rpc::transfer(regid from, regid to, asset quantity, string memo) {
+
+    check( get_first_receiver() == BANK_DEFAULT, "must transfer by bank=" + BANK_DEFAULT.to_string() );
+    check(from != to, "cannot transfer to self");
+    check(to == _self, "can transfer to contract self only for recharge");
     require_auth(from);
     check(is_account(to), "to account does not exist");
     auto sym = quantity.symbol.code();
@@ -18,13 +22,14 @@ ACTION rpc::recharge(regid from, regid to, asset quantity, string memo) {
     notify_recipient(from);
     notify_recipient(to);
 
-    //  check( quantity.is_valid(), "invalid quantity" );
-    //  check( quantity.amount > 0, "must transfer positive quantity" );
+    check( quantity.is_valid(), "invalid quantity" );
+    check( quantity.amount > 0, "must transfer positive quantity" );
     //  check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
-    //  check( memo.size() <= 256, "memo has more than 256 bytes" );
+    check( memo.size() <= 256, "memo has more than 256 bytes" );
 
     //  auto payer = has_auth( to ) ? to : from;
 
+    // recharge
     add_balance(to, quantity);
 }
 
@@ -52,7 +57,7 @@ ACTION rpc::get_balance(regid id, symbol_code sym) {
 //       });
 // }
 
-void rpc::add_balance(regid id, asset value) {
+void rpc::add_balance(const regid &id, const asset &value) {
     accounts accts(_self, id.value);
 
     account acct;
@@ -66,4 +71,4 @@ void rpc::add_balance(regid id, asset value) {
     }
 }
 
-WASM_DISPATCH(rpc, (recharge))
+WASM_DISPATCH(rpc, (transfer)(get_balance))
