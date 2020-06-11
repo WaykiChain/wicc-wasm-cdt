@@ -1,4 +1,4 @@
-#include <rpc_get.hpp>
+#include "rpc_get.hpp"
 #include <rpc.hpp>
 
 using namespace wasm;
@@ -46,6 +46,19 @@ ACTION rpc::get_balance(regid id, symbol_code sym) {
     set_rpc_result("balance", "uint64", value);
 }
 
+
+ACTION rpc::get_account(regid id, symbol_code sym){
+
+    accounts accts(_self, id.value);
+    account acct;
+    uint64_t balance = 0;
+    check_fmt(accts.get(acct, sym.raw()), "the account not exist! id=%s, sym=%s",
+          id.to_string().c_str(), sym.to_string().c_str());
+
+    auto value = wasm::pack<account>(acct);
+    set_rpc_result("account", "account", value);
+}
+
 // void rpc::sub_balance( regid owner, asset value ) {
 //    accounts from_acnts( _self, owner.value );
 
@@ -74,4 +87,4 @@ void rpc::add_balance(const regid &id, const asset &value) {
     }
 }
 
-WASM_DISPATCH(rpc, (transfer)(get_balance))
+WASM_DISPATCH(rpc, (transfer)(get_balance)(get_account))

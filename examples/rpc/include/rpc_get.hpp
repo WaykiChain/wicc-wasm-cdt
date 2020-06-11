@@ -30,6 +30,7 @@ public:
 
     // RPC
     ACTION get_balance(regid id, symbol_code sym);
+    ACTION get_account(regid id, symbol_code sym);
 private:
     void add_balance(const regid &id, const asset &value);
 private:
