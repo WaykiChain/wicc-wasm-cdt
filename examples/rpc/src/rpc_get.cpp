@@ -55,7 +55,7 @@ ACTION rpc::get_account(regid id, symbol_code sym){
     check_fmt(accts.get(acct, sym.raw()), "the account not exist! id=%s, sym=%s",
           id.to_string().c_str(), sym.to_string().c_str());
 
-    set_result("account", "account", acct);
+    emit_result("account", "account", acct);
 }
 
 // void rpc::sub_balance( regid owner, asset value ) {
