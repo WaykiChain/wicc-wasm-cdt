@@ -21,7 +21,7 @@ namespace wasm {
      uint32_t get_system_asset_price(uint64_t, uint64_t, void*, uint32_t);
 
      __attribute__((wasm_wasm_import))
-     void set_rpc_result(const uint64_t &name, const char *value, uint32_t value_len);
+     void set_rpc_result(const char *name, uint32_t name_sz, const char *value, uint32_t value_sz);
    }
 
    uint64_t current_block_time() {
@@ -56,10 +56,9 @@ namespace wasm {
       return wasm::unpack<wasm::asset>(bytes);
   }
 
-
-   void set_rpc_result(const uint64_t &name, const std::vector<char> &value) {
-      set_rpc_result(name, value.data(), value.size());
-   }
+  void set_rpc_result(const string &name, const std::vector<char> &value) {
+     set_rpc_result(name.c_str(), name.size(), value.data(), value.size());
+  }
 
 
 } // namespace wasm
