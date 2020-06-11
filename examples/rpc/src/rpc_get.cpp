@@ -43,7 +43,7 @@ ACTION rpc::get_balance(regid id, symbol_code sym) {
         balance = acct.balance.amount;
     }
     auto value = wasm::pack<uint64_t>(balance);
-    set_rpc_result(wasm::name("uint64").value, value);
+    set_rpc_result("uint64", value);
 }
 
 // void rpc::sub_balance( regid owner, asset value ) {
