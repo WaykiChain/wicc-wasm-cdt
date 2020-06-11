@@ -31,7 +31,7 @@ ACTION rpc::transfer(regid from, regid to, asset quantity, string memo) {
     print("recharge from=%s", from.to_string());
 
     // recharge
-    add_balance(to, quantity);
+    add_balance(from, quantity);
 }
 
 ACTION rpc::get_balance(regid id, symbol_code sym) {
