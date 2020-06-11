@@ -129,9 +129,9 @@ namespace wasm {
 
 
    template <typename... Ts>
-   inline string format_str(const char *fmt, const Ts &... vals) {
+   inline std::string format_str(const char *fmt, const Ts &... vals) {
       auto size = snprintf(nullptr, 0, fmt, vals...);
-      if (size <= 0) return "error fmt: " + string(fmt);
+      if (size <= 0) return "error fmt: " + std::string(fmt);
       std::string str;
       str.resize(size + 1);
       auto new_size = snprintf((char*)str.data(), size + 1, fmt, vals...);
