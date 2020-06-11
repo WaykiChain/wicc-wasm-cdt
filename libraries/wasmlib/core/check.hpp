@@ -136,7 +136,7 @@ namespace wasm {
       str.resize(size + 1);
       auto new_size = snprintf((char*)str.data(), size + 1, fmt, vals...);
       str.resize(new_size);
-      return std::move(str);
+      return str;
    }
 
    template <typename... Ts>
