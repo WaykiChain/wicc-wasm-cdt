@@ -4,11 +4,11 @@
 namespace wasm {
 
 /**
- *  set the result for wasm rpc.
+ *  emit result value for wasm_getresult.
  *
- *  @ingroup set_rpc_result
+ *  @ingroup emit_result_value
  */
-void set_rpc_result(const string &name, const string &type, const std::vector<char> &value);
+void emit_result_value(const string &name, const string &type, const std::vector<char> &value);
 
 
 /**
@@ -19,7 +19,7 @@ void set_rpc_result(const string &name, const string &type, const std::vector<ch
   template <typename T>
   inline void emit_result(const string &name, const string &type, const T &value) {
     auto v = wasm::pack<T>(value);
-    set_rpc_result(name, type, v);
+    emit_result_value(name, type, v);
   }
 
 } // namespace wasm

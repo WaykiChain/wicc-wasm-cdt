@@ -21,7 +21,7 @@ namespace wasm {
      uint32_t get_system_asset_price(uint64_t, uint64_t, void*, uint32_t);
 
      __attribute__((wasm_wasm_import))
-     void set_rpc_result(const char *name, uint32_t name_sz, const char *type, uint32_t type_sz,
+     void emit_result(const char *name, uint32_t name_sz, const char *type, uint32_t type_sz,
                          const char *value, uint32_t value_sz);
    }
 
@@ -57,8 +57,8 @@ namespace wasm {
       return wasm::unpack<wasm::asset>(bytes);
   }
 
-  void set_rpc_result(const string &name, const string &type, const std::vector<char> &value) {
-      set_rpc_result(name.c_str(), name.size(), type.c_str(), type.size(), value.data(),
+  void emit_result_value(const string &name, const string &type, const std::vector<char> &value) {
+      emit_result(name.c_str(), name.size(), type.c_str(), type.size(), value.data(),
                      value.size());
   }
 
