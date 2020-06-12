@@ -122,7 +122,7 @@ static inline string FromHex( string str ) {
 ACTION prints::print5()
 {
 
-    wasm::checksum256 txid = get_txid();
+    auto txid = get_txid();
     txid.print();
 
     print(" ");
