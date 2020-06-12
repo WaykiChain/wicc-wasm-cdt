@@ -66,12 +66,11 @@ class ValidateVisitor : public RecursiveASTVisitor<ValidateVisitor> {
 };
 
 class ValidateConsumer : public ASTConsumer {
-  CompilerInstance &Instance;
   std::set<std::string> ParsedTemplates;
 
 public:
   ValidateConsumer(CompilerInstance &Instance)
-      : Instance(Instance), visitor(Instance) {}
+      : visitor(Instance) {}
   virtual void HandleTranslationUnit(ASTContext& ctx) {
      visitor.TraverseDecl(ctx.getTranslationUnitDecl());
   }
