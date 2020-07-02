@@ -224,6 +224,8 @@ namespace wasmcdt { namespace cdt {
          t.type = decl->getNameAsString();
          t.name = name_to_string(name);
          _abi.tables.insert(t);
+
+         //std::cout << "type:" << t.type << " name:" << t.name << std::endl;
       }
 
       void add_clauses( const std::vector<std::pair<std::string, std::string>>& clauses ) {
