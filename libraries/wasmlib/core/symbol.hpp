@@ -362,7 +362,7 @@ namespace wasm {
          char buffer[7];
          auto end = code().write_as_string( buffer, buffer + sizeof(buffer) );
          if( buffer < end )
-            ::wasm::print( buffer, (end-buffer) );
+            printl( buffer, (end-buffer) );
       }
 
 
