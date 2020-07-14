@@ -36,10 +36,11 @@ namespace wasm {
       ds >> args;
 
       T inst(self, code, ds);
-
+      inst.pre_action();
       auto f2 = [&]( auto... a ){
          ((&inst)->*func)( a... );
       };
+      inst.post_action();
 
       boost::mp11::tuple_apply( f2, args );
       if ( max_stack_buffer_size < size ) {
