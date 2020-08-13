@@ -39,6 +39,15 @@ class contract {
       contract( regid self, regid first_receiver, datastream<const char*> ds ):_self(self),_first_receiver(first_receiver),_ds(ds) {}
 
       /**
+       * pre action execution for application contract extension
+       */
+      virtual void pre_action() {};
+      /**
+       * post action execution for application contract extension
+       */
+      virtual void post_action() {};
+
+      /**
        *
        * Get this contract regid
        *
@@ -90,5 +99,6 @@ class contract {
        * The datastream for this contract
        */
       datastream<const char*> _ds = datastream<const char*>(nullptr, 0);
+
 };
 }
