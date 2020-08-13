@@ -980,8 +980,8 @@ static StringRef getOutputDataSegmentName(StringRef Name) {
 
 void Writer::createOutputSegments() {
   for (ObjFile *File : Symtab->ObjectFiles) {
-    if (!File->getEosioABI().empty())
-       abis.push_back(File->getEosioABI());
+    if (!File->getWasmABI().empty())
+       abis.push_back(File->getWasmABI());
     for (InputSegment *Segment : File->Segments) {
       if (!Segment->Live)
         continue;
@@ -1003,13 +1003,16 @@ static constexpr int OPCODE_IF   = 0x4;
 static constexpr int OPCODE_ELSE = 0x5;
 static constexpr int OPCODE_END  = 0xb;
 static constexpr int OPCODE_GET_LOCAL = 0x20;
+//static constexpr int OPCODE_I32_EQZ   = 0x45;
 static constexpr int OPCODE_I64_EQ    = 0x51;
-static constexpr int OPCODE_I64_NE    = 0x52;
+//static constexpr int OPCODE_I64_NE    = 0x52;
 static constexpr int OPCODE_I32_CONST = 0x41;
 static constexpr int OPCODE_I64_CONST = 0x42;
-static constexpr uint64_t EOSIO_COMPILER_ERROR_BASE = 8000000000000000000ull;
-static constexpr uint64_t EOSIO_ERROR_NO_ACTION     = EOSIO_COMPILER_ERROR_BASE;
-static constexpr uint64_t EOSIO_ERROR_ONERROR       = EOSIO_COMPILER_ERROR_BASE+1;
+static constexpr uint64_t WASM_COMPILER_ERROR_BASE          = 8000000000000000000ull;
+static constexpr uint64_t WASM_ERROR_NO_ACTION              = WASM_COMPILER_ERROR_BASE;
+static constexpr uint64_t WASM_ERROR_PRE_DISPATCH_FAIL      = WASM_COMPILER_ERROR_BASE+1;
+//static constexpr uint64_t WASM_ERROR_ONERROR              = WASM_COMPILER_ERROR_BASE+1;
+
 
 void Writer::createDispatchFunction() {
 
@@ -1019,6 +1022,7 @@ void Writer::createDispatchFunction() {
       }
       need_else = true;
       uint64_t nm = wasmcdt::cdt::string_to_name(str.substr(0, str.find(":")).c_str());
+      
       writeU8(os, OPCODE_I64_CONST, "I64 CONST");
       encodeSLEB128((int64_t)nm, os);
       writeU8(os, OPCODE_GET_LOCAL, "GET_LOCAL");
@@ -1040,12 +1044,10 @@ void Writer::createDispatchFunction() {
    };
 
    //xiaoyu
-   //auto assert_sym = (FunctionSymbol*)Symtab->find("wasmcdt_assert_code");
    auto assert_sym = (FunctionSymbol*)Symtab->find("wasm_assert_code");
    uint32_t assert_idx = UINT32_MAX;
    if (assert_sym)
      assert_idx = assert_sym->getFunctionIndex();
-   auto post_sym = (FunctionSymbol*)Symtab->find("post_dispatch");
 
    auto create_action_dispatch = [&](raw_string_ostream& OS) {
       // count how many total actions we have
@@ -1055,8 +1057,8 @@ void Writer::createDispatchFunction() {
       std::set<StringRef> has_dispatched;
       bool need_else = false;
       for (ObjFile *File : Symtab->ObjectFiles) {
-        if (!File->getEosioActions().empty()) {
-            for (auto act : File->getEosioActions()) {
+        if (!File->getWasmActions().empty()) {
+            for (auto act : File->getWasmActions()) {
               if (has_dispatched.insert(act).second) {
                 create_if(OS, act.str(), need_else);
                 act_cnt++;
@@ -1064,46 +1066,27 @@ void Writer::createDispatchFunction() {
             }
         }
       }
+ 
       if (act_cnt > 0)
-        writeU8(OS, OPCODE_ELSE, "ELSE");
+        writeU8(OS, OPCODE_ELSE, "ELSE");//else the last action for no actions, and must assert
 
-      // do not fail if self == wasmcdt
-      writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-      writeUleb128(OS, 0, "self");
-      writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
-      encodeSLEB128((int64_t)wasmcdt::cdt::string_to_name("wasmcdt"), OS);
-      writeU8(OS, OPCODE_I64_NE, "I64.NE");
-      writeU8(OS, OPCODE_IF, "if receiver != wasmcdt");
-      writeU8(OS, 0x40, "none");
 
       if (assert_sym && assert_idx < Symtab->getSymbols().size()) {
         // assert that no action was found
         writeU8(OS, OPCODE_I32_CONST, "I32.CONST");
         writeUleb128(OS, 0, "false");
         writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
-        encodeSLEB128((int64_t)EOSIO_ERROR_NO_ACTION, OS);
+        encodeSLEB128((int64_t)WASM_ERROR_NO_ACTION, OS);
         writeU8(OS, OPCODE_CALL, "CALL");
         writeUleb128(OS, assert_idx, "code");
       } else {
          fatal("fatal failure: contract with no actions and trying to create dispatcher"); 
       }
-      if (post_sym) {
-         writeU8(OS, OPCODE_ELSE, "ELSE");
-         uint32_t post_idx  = post_sym->getFunctionIndex();
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 0, "receiver");
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 1, "code");
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 2, "action");
-         writeU8(OS, OPCODE_CALL, "CALL");
-         writeUleb128(OS, post_idx, "post_dispatch call");
-      }
-      writeU8(OS, OPCODE_END, "END");
 
       for (int i=0; i < act_cnt; i++) {
          writeU8(OS, OPCODE_END, "END");
       }
+
    };
 
    auto create_notify_dispatch = [&](raw_string_ostream& OS) {
@@ -1112,72 +1095,75 @@ void Writer::createDispatchFunction() {
       std::set<StringRef> has_dispatched;
       std::map<std::string, std::vector<std::string>> notify_handlers;
       for (ObjFile *File : Symtab->ObjectFiles) {
-         if (!File->getEosioNotify().empty()) {
-            for (auto notif : File->getEosioNotify()) {
+         if (!File->getWasmNotify().empty()) {
+            for (auto notif : File->getWasmNotify()) {
               if (has_dispatched.insert(notif).second) {
                 not_cnt++;
                 std::string snotif = notif.str();
                 size_t idx = snotif.find(":");
-                // <code_name>::<action>:<generated_notify_dispatch_func>
                 auto code_name = snotif.substr(0, idx);
                 auto rest      = snotif.substr(idx+2);
                 notify_handlers[code_name].push_back(rest);
+
               }
             }
          }
       }
       
       // check for onerror first
-      bool has_onerror_handler = false;
-      if (not_cnt > 0) {
-         for (auto const& notif0 : notify_handlers) {
-            if (notif0.first == "wasmcdt") {
-               for (auto const& notif1 : notif0.second) {
-                  if (notif1.substr(0, notif1.find(":")) == "onerror") {
-                     has_onerror_handler = true;
-                  }
-               }
-            }
-         }
-      }
+      // bool has_onerror_handler = false;
+      // if (not_cnt > 0) {
+      //    for (auto const& notif0 : notify_handlers) {
+      //       if (notif0.first == "wasmcdt") {
+      //          for (auto const& notif1 : notif0.second) {
+      //             if (notif1.substr(0, notif1.find(":")) == "onerror") {
+      //                has_onerror_handler = true;
+      //             }
+      //          }
+      //       }
+      //    }
+      // }
 
-      if (!has_onerror_handler) {
-         // assert on onerror
-         writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
-         uint64_t acnt = wasmcdt::cdt::string_to_name("wasmcdt");
-         encodeSLEB128((int64_t)acnt, OS);
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 1, "code");
-         writeU8(OS, OPCODE_I64_EQ, "I64.EQ");
-         writeU8(OS, OPCODE_IF, "IF code==wasmcdt");
-         writeU8(OS, 0x40, "none");
-         writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
-         uint64_t nm = wasmcdt::cdt::string_to_name("onerror");
-         encodeSLEB128((int64_t)nm, OS);
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 2, "action");
-         writeU8(OS, OPCODE_I64_EQ, "I64.EQ");
-         writeU8(OS, OPCODE_IF, "IF action==onerror");
-         writeU8(OS, 0x40, "none");
-         writeU8(OS, OPCODE_I32_CONST, "I32.CONST");
-         writeUleb128(OS, 0, "false");
-         writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
-         encodeSLEB128((int64_t)EOSIO_ERROR_ONERROR, OS);
-         writeU8(OS, OPCODE_CALL, "CALL");
-         writeUleb128(OS, assert_idx, "code");
-         writeU8(OS, OPCODE_END, "END");
-         writeU8(OS, OPCODE_END, "END");
-      }
+      // if (!has_onerror_handler) {
+      //    // assert on onerror
+      //    writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
+      //    uint64_t acnt = wasmcdt::cdt::string_to_name("wasmcdt");
+      //    encodeSLEB128((int64_t)acnt, OS);
+      //    writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
+      //    writeUleb128(OS, 1, "code");
+      //    writeU8(OS, OPCODE_I64_EQ, "I64.EQ");
+      //    writeU8(OS, OPCODE_IF, "IF code==wasmcdt");
+      //    writeU8(OS, 0x40, "none");
+      //    writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
+      //    uint64_t nm = wasmcdt::cdt::string_to_name("onerror");
+      //    encodeSLEB128((int64_t)nm, OS);
+      //    writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
+      //    writeUleb128(OS, 2, "action");
+      //    writeU8(OS, OPCODE_I64_EQ, "I64.EQ");
+      //    writeU8(OS, OPCODE_IF, "IF action==onerror");
+      //    writeU8(OS, 0x40, "none");
+      //    writeU8(OS, OPCODE_I32_CONST, "I32.CONST");
+      //    writeUleb128(OS, 0, "false");
+      //    writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
+      //    encodeSLEB128((int64_t)WASM_ERROR_ONERROR, OS);
+      //    writeU8(OS, OPCODE_CALL, "CALL");
+      //    writeUleb128(OS, assert_idx, "code");
+      //    writeU8(OS, OPCODE_END, "END");
+      //    writeU8(OS, OPCODE_END, "END");
+      // }
 
       // dispatch notification handlers
       bool notify0_need_else = false;
+
+      int notify_group_cnt = 0;
       if (not_cnt > 0) {
-         bool has_written = false;
          for (auto const& notif0 : notify_handlers) {
-            uint64_t nm = wasmcdt::cdt::string_to_name(notif0.first.c_str());
+            uint64_t nm = wasmcdt::cdt::string_to_regid(notif0.first.c_str());
             if (notif0.first == "*")
                continue;
-            has_written = true;
+            else
+              notify_group_cnt ++;
+
             if (notify0_need_else)
                writeU8(OS, OPCODE_ELSE, "ELSE");
             writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
@@ -1192,35 +1178,33 @@ void Writer::createDispatchFunction() {
                create_if(OS, notif1, need_else);
             for (int i=0; i < notif0.second.size(); i++)
                writeU8(OS, OPCODE_END, "END");
+
             notify0_need_else = true;
+             
          }
-         if (has_written)
-            writeU8(OS, OPCODE_ELSE, "ELSE");
+
       }
 
+      bool has_written_star = false;
       if (!notify_handlers["*"].empty()) {
          bool need_else = false;
          for (auto const& notif1 : notify_handlers["*"]) {
+            if(!has_written_star && notify_group_cnt > 0){
+               writeU8(OS, OPCODE_ELSE, "ELSE");
+            }
+
+            has_written_star = true;
             create_if(OS, notif1, need_else);
          }
       }
 
-      if (post_sym) {
-         writeU8(OS, OPCODE_ELSE, "ELSE");
-         uint32_t post_idx  = post_sym->getFunctionIndex();
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 0, "receiver");
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 1, "code");
-         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
-         writeUleb128(OS, 2, "action");
-         writeU8(OS, OPCODE_CALL, "CALL");
-         writeUleb128(OS, post_idx, "post_dispatch call");
-         writeU8(OS, OPCODE_END, "END");
-      }
-
       for (int i=0; i < notify_handlers["*"].size(); i++)
         writeU8(OS, OPCODE_END, "END");
+
+
+      for(int i=0; i<notify_group_cnt; i++)
+             writeU8(OS, OPCODE_END, "END");//end notify_group_cnt's if
+
    };
 
    std::string BodyContent;
@@ -1236,7 +1220,6 @@ void Writer::createDispatchFunction() {
             writeU8(OS, OPCODE_CALL, "CALL");
             writeUleb128(OS, ctors_idx, "__wasm_call_ctors");
          }
-
       }
 
 
@@ -1252,6 +1235,18 @@ void Writer::createDispatchFunction() {
          writeUleb128(OS, 2, "action");
          writeU8(OS, OPCODE_CALL, "CALL");
          writeUleb128(OS, pre_idx, "pre_dispatch call");
+
+         // writeU8(OS, OPCODE_I32_EQZ, "I32.EQZ");
+         // writeU8(OS, OPCODE_IF, "IF pre_dispatch return false");
+         // writeU8(OS, 0x40, "none");
+         // writeU8(OS, OPCODE_I32_CONST, "I32.CONST");
+         // writeUleb128(OS, 0, "false");
+         // writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
+         // encodeSLEB128((int64_t)WASM_ERROR_ASSERT_BY_PRE_DISPATCH, OS);
+         // writeU8(OS, OPCODE_CALL, "CALL");
+         // writeUleb128(OS, assert_idx, "code");
+         // writeU8(OS, OPCODE_END, "END");
+
          writeU8(OS, OPCODE_IF, "IF pre_dispatch -> T");
          writeU8(OS, 0x40, "none");
       }
@@ -1269,11 +1264,27 @@ void Writer::createDispatchFunction() {
       create_action_dispatch(OS);
 
       // now doing notification handling
-      writeU8(OS, OPCODE_ELSE, "ELSE");
+      writeU8(OS, OPCODE_ELSE, "ELSE");//else code != receiver
 
       create_notify_dispatch(OS);
 
-      writeU8(OS, OPCODE_END, "END");
+      writeU8(OS, OPCODE_END, "END");//end code == receiver
+ 
+      auto post_sym = (FunctionSymbol*)Symtab->find("post_dispatch");
+
+      if (post_sym) {
+         uint32_t post_idx  = post_sym->getFunctionIndex();
+
+         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
+         writeUleb128(OS, 0, "receiver");
+         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
+         writeUleb128(OS, 1, "code");
+         writeU8(OS, OPCODE_GET_LOCAL, "GET_LOCAL");
+         writeUleb128(OS, 2, "action");
+         writeU8(OS, OPCODE_CALL, "CALL");
+         writeUleb128(OS, post_idx, "post_dispatch call");
+      }
+
 
       auto dtors_sym = (FunctionSymbol*)Symtab->find("__cxa_finalize");
       if (dtors_sym) {
@@ -1284,10 +1295,28 @@ void Writer::createDispatchFunction() {
             writeU8(OS, OPCODE_CALL, "CALL");
             writeUleb128(OS, dtors_idx, "__cxa_finalize");
          }
+
       }
-      if (pre_sym)
-         writeU8(OS, OPCODE_END, "END");
-      writeU8(OS, OPCODE_END, "END");
+
+      if (pre_sym){
+
+          if (assert_sym && assert_idx < Symtab->getSymbols().size()) {
+            writeU8(OS, OPCODE_ELSE, "ELSE");
+
+            // assert that no action was found
+            writeU8(OS, OPCODE_I32_CONST, "I32.CONST");
+            writeUleb128(OS, 0, "false");
+            writeU8(OS, OPCODE_I64_CONST, "I64.CONST");
+            encodeSLEB128((int64_t)WASM_ERROR_PRE_DISPATCH_FAIL, OS);
+            writeU8(OS, OPCODE_CALL, "CALL");
+            writeUleb128(OS, assert_idx, "code");
+            //writeU8(OS, OPCODE_END, "END");//close pre_dispatch if
+          } else {
+             fatal("fatal failure: contract with pre_dispatch, but no wasm_assert_code and trying to create dispatcher"); 
+          }
+       }
+
+       writeU8(OS, OPCODE_END, "END");//close body
    }
 
    std::string FunctionBody;

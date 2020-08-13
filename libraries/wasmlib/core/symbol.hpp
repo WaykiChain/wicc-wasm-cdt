@@ -352,6 +352,18 @@ namespace wasm {
 
       constexpr explicit operator bool()const { return value != 0; }
 
+      std::string to_string(bool show_precision = true) const{
+         std::string str;
+         if( show_precision ){
+            str += to_string(precision());
+            str += ",";
+         }
+ 
+         char buffer[7];
+         auto end = code().write_as_string( buffer, buffer + sizeof(buffer) );
+         return str + string(buffer, end);       
+      }
+
       /**
        * %Print the symbol
        */
@@ -448,6 +460,14 @@ namespace wasm {
      sym = symbol(raw);
      return ds;
    }
+
+   // inline std::string to_string(const wasm::symbol& v){
+   //    return v.to_string();
+   // }
+
+   // inline std::string to_string(const wasm::symbol_code& v){
+   //    return v.to_string();
+   // }
 
    /**
     *  Extended asset which stores the information of the owner of the symbol

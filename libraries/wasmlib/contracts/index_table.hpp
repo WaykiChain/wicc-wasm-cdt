@@ -172,12 +172,12 @@ public:
            	   //auto old_secondary = pack(std::tuple(TableName, _scope, index_type::name(), index_type::extract_secondary_key(old_object)));
            	   auto old_secondary = pack(std::tuple(SECONDARY_KEY_PREFIX, TableName, _scope, index_type::name(), index_type::extract_secondary_key(old_object)));
            	   db_remove(payer.value, old_secondary.data(), old_secondary.size());
-
-	           //auto secondary = pack(std::tuple(TableName, _scope, index_type::name(), index_type::extract_secondary_key(obj)));
-	           auto secondary = pack(std::tuple(SECONDARY_KEY_PREFIX, TableName, _scope, index_type::name(), index_type::extract_secondary_key(obj)));
-	           auto primary   = pack(obj.primary_key());
-	           db_store(payer.value, secondary.data(), secondary.size(), primary.data(), primary.size());
            }
+	           //auto secondary = pack(std::tuple(TableName, _scope, index_type::name(), index_type::extract_secondary_key(obj)));
+           auto secondary = pack(std::tuple(SECONDARY_KEY_PREFIX, TableName, _scope, index_type::name(), index_type::extract_secondary_key(obj)));
+           auto primary   = pack(obj.primary_key());
+           db_store(payer.value, secondary.data(), secondary.size(), primary.data(), primary.size());
+
 
         });
 

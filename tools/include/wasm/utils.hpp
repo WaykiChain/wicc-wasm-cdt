@@ -17,6 +17,50 @@ extern char **environ;
 
 namespace wasmcdt { namespace cdt {
 
+uint64_t string_to_regid(const std::string& str)
+{
+    auto pos = str.find('-');
+
+    //check( pos > 0, "'-' must be between two numbers, ex. '999-80'");
+    //fixme:should validate pos
+
+    uint64_t height   = atoi(str.substr(0, pos).data());
+    uint64_t index    = atoi(str.substr(pos + 1).data());   
+
+    //fixme:should validate height and index
+
+    return (height << 20) + index;
+}
+
+std::string regid_to_string( uint64_t value ) {
+    uint64_t height = value >> 20;
+    uint64_t index  = value & 0xFFFFF;
+
+    char buffer[64];
+    sprintf(buffer, "%lld-%lld", height, index);
+    return std::string(buffer); 
+}
+
+template <typename Lambda>
+void validate_regid( const std::string& str, Lambda&& error_handler ) {
+
+   auto pos = str.find('-');
+   if ( pos <= 0 ) { 
+      std::cout << "Error, regid {" << str << "} '-' must be between two numbers, ex. '999-80'\n";
+      return error_handler();
+   }
+
+   uint64_t height   = atoi(str.substr(0, pos).data());
+   uint64_t index    = atoi(str.substr(pos + 1).data()); 
+
+   //0:800 fixme:xiaoyu
+   if ( (height == 0 && index != 800) || index == 0 ) {
+      std::cout << "Error, regid not properly normalized\n";
+      return error_handler();
+   }
+}
+
+
 uint64_t char_to_symbol( char c ) {
    if( c >= 'a' && c <= 'z' )
       return (c - 'a') + 6;

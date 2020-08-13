@@ -42,10 +42,10 @@ configure_file(${CMAKE_SOURCE_DIR}/modules/WasmWasmToolchain.cmake.in ${CMAKE_BI
 
 set(CDT_ROOT_DIR ${CDT_INSTALL_PREFIX})
 configure_file(${CMAKE_SOURCE_DIR}/modules/wasm.cdt-config.cmake ${CMAKE_BINARY_DIR}/modules/wasm.cdt-config.cmake @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/modules/wasm.cdt-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/wasm.cdt)
+# install(FILES ${CMAKE_BINARY_DIR}/modules/wasm.cdt-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/wasm.cdt)
 configure_file(${CMAKE_SOURCE_DIR}/modules/WasmCDTMacros.cmake.in ${CMAKE_BINARY_DIR}/modules/WasmCDTMacros.cmake @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/modules/WasmWasmToolchain.cmake.in ${CMAKE_BINARY_DIR}/modules/WasmWasmToolchain.cmake @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/modules/WasmWasmToolchain.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/wasm.cdt)
+# install(FILES ${CMAKE_BINARY_DIR}/modules/WasmWasmToolchain.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/wasm.cdt)
 install(FILES ${CMAKE_BINARY_DIR}/modules/WasmCDTMacros.cmake DESTINATION ${CDT_INSTALL_PREFIX}/lib/cmake/wasm.cdt)
 
 set(CDT_ROOT_DIR "_PREFIX_")
@@ -54,6 +54,11 @@ configure_file(${CMAKE_SOURCE_DIR}/modules/WasmWasmToolchain.cmake.in ${CMAKE_BI
 configure_file(${CMAKE_SOURCE_DIR}/modules/wasm.cdt-config.cmake ${CMAKE_BINARY_DIR}/modules/wasm.cdt-config.cmake.package @ONLY)
 
 include(modules/LibrariesExternalProject.txt)
+
+set(CDT_ROOT_DIR ${CDT_INSTALL_PREFIX})
+configure_file(${CMAKE_SOURCE_DIR}/modules/wasm.cdt-config.cmake ${CMAKE_BINARY_DIR}/lib/cmake/wasm.cdt/wasm.cdt-config.cmake @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/modules/WasmCDTMacros.cmake.in ${CMAKE_BINARY_DIR}/lib/cmake/wasm.cdt/WasmCDTMacros.cmake @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/modules/WasmWasmToolchain.cmake.in ${CMAKE_BINARY_DIR}/lib/cmake/wasm.cdt/WasmWasmToolchain.cmake @ONLY)
 
 include(modules/InstallCDT.cmake)
 

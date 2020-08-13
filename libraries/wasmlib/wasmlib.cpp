@@ -23,6 +23,16 @@ namespace wasm {
      __attribute__((wasm_wasm_import))
      void emit_result(const char *name, uint32_t name_sz, const char *type, uint32_t type_sz,
                          const char *value, uint32_t value_sz);
+
+     // __attribute__((wasm_wasm_import))
+     // void set_return(const void* data, uint32_t data_len);
+
+     // __attribute__((wasm_wasm_import))
+     // uint64_t get_return(const void* data, uint32_t data_len);
+
+
+     // __attribute__((wasm_wasm_import))
+     // void make_log( uint64_t payer, uint64_t receiver, const char* topic, uint32_t topic_len, const char *data, uint32_t data_len );
    }
 
    uint64_t current_block_time() {
@@ -61,5 +71,20 @@ namespace wasm {
       emit_result(name.c_str(), name.size(), type.c_str(), type.size(), value.data(),
                      value.size());
   }
+  
+  // void set_return(const vector<char>& bytes){
+  //     set_return((void*)bytes.data(), bytes.size());
+  // }
+
+  // vector<char> get_return(uint32_t size){
+  //     vector<char> value(size);
+  //     get_return((void*)value.data(), size);
+  //     return value;
+  // }
+
+  // void make_log(regid owner, const string& topic, const vector<char>& value){
+  //     make_log(0, owner.value, topic.data(), topic.size(), value.data(), value.size());
+  // }
+
 
 } // namespace wasm

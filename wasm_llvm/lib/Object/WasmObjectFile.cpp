@@ -716,13 +716,13 @@ Error WasmObjectFile::parseCustomSection(WasmSection &Sec, ReadContext &Ctx) {
   if (Sec.Name == ".imports") {
      if (Error Err = parseAllowedSection(Ctx))
         return Err;
-  } else if (Sec.Name == ".eosio_abi") {
+  } else if (Sec.Name == ".wasm_abi") {
      if (Error Err = parseEosioABISection(Ctx))
         return Err;
-  } else if (Sec.Name == ".eosio_actions") {
+  } else if (Sec.Name == ".wasm_actions") {
      if (Error Err = parseActionsSection(Ctx))
         return Err;
-  } else if (Sec.Name == ".eosio_notify") {
+  } else if (Sec.Name == ".wasm_notify") {
      if (Error Err = parseNotifySection(Ctx))
         return Err;
   } else if (Sec.Name == "name") {

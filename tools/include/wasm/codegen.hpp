@@ -231,10 +231,10 @@ namespace wasmcdt { namespace cdt {
             if (cg.is_wasm_contract(decl, cg.contract_name)) {
                if (has_wasmlib) {
                   ss << "\n\n#include <wasmlib/datastream.hpp>\n";
-                  ss << "#include <wasmlib/name.hpp>\n";
+                  ss << "#include <wasmlib/regid.hpp>\n";
                } else {
                   ss << "\n\n#include <datastream.hpp>\n";
-                  ss << "#include <name.hpp>\n";
+                  ss << "#include <regid.hpp>\n";
                }
                ss << "extern \"C\" {\n";
                ss << "uint32_t action_data_size();\n";
@@ -265,7 +265,7 @@ namespace wasmcdt { namespace cdt {
                   ss << tn << " arg" << i << "; ds >> arg" << i << ";\n";
                   i++;
                }
-               ss << decl->getParent()->getQualifiedNameAsString() << "{wasm::name{r},wasm::name{c},ds}." << decl->getNameAsString() << "(";
+               ss << decl->getParent()->getQualifiedNameAsString() << "{wasm::regid{r},wasm::regid{c},ds}." << decl->getNameAsString() << "(";
                for (int i=0; i < decl->parameters().size(); i++) {
                   ss << "arg" << i;
                   if (i < decl->parameters().size()-1)
@@ -273,9 +273,6 @@ namespace wasmcdt { namespace cdt {
                }
                ss << ");";
                ss << "}}\n";
-
-               std::cout<< attr <<" " << func_name <<" create_dispatch ------------------------------------------" << std::endl;
-               std::cout<< ss.str() << std::endl;
 
                rewriter.InsertTextAfter(ci->getSourceManager().getLocForEndOfFile(main_fid), ss.str());
             }
@@ -305,28 +302,18 @@ namespace wasmcdt { namespace cdt {
                   if (*itr != name)
                      emitError(*ci, decl->getLocation(), "action declaration doesn't match previous declaration");
                }
-               if (cg.actions.count(decl->getNameAsString()) == 0) {
-                  if (cg.actions.count(name) == 0)
-                     create_action_dispatch(decl);
-                  else
-                     emitError(*ci, decl->getLocation(), "action already defined elsewhere");
+               std::string full_action_name = decl->getNameAsString() + ((decl->getParent()) ? decl->getParent()->getNameAsString() : "");
+               if (cg.actions.count(full_action_name) == 0) {
+                  create_action_dispatch(decl);
                }
-               cg.actions.insert(decl->getNameAsString()); // insert the method action, so we don't create the dispatcher twice
-               cg.actions.insert(name);
-               /*
-               for (auto param : decl->parameters()) {
-                  if (auto tp = dyn_cast<NamedDecl>(param->getOriginalType().getTypePtr()->getAsCXXRecordDecl())) {
-                     cg.datastream_uses.insert(tp->getQualifiedNameAsString());
-                  }
-               }
-               */
+               cg.actions.insert(full_action_name); // insert the method action, so we don't create the dispatcher twice
             }
             else if (decl->isWasmNotify()) {
 
                name = generation_utils::get_notify_pair(decl);
                auto first = name.substr(0, name.find("::"));
                if (first != "*")
-                  validate_name(first, [&]() {emitError(*ci, decl->getLocation(), "invalid contract name");});
+                  validate_regid(first, [&]() {emitError(*ci, decl->getLocation(), "invalid contract regid");});
                auto second = name.substr(name.find("::")+2);
                validate_name(second, [&]() {emitError(*ci, decl->getLocation(), "invalid action name");});
 
@@ -338,24 +325,13 @@ namespace wasmcdt { namespace cdt {
                      emitError(*ci, decl->getLocation(), "notify handler declaration doesn't match previous declaration");
                }
 
-               if (cg.notify_handlers.count(decl->getNameAsString()) == 0) {
-                  if (cg.notify_handlers.count(name) == 0)
-                     create_notify_dispatch(decl);
-                  else
-                     emitError(*ci, decl->getLocation(), "notification handler already defined elsewhere");
+               std::string full_notify_name = decl->getNameAsString() + ((decl->getParent()) ? decl->getParent()->getNameAsString() : "");
+               if (cg.notify_handlers.count(full_notify_name) == 0) {
+                  create_notify_dispatch(decl);
                }
-               cg.notify_handlers.insert(decl->getNameAsString()); // insert the method action, so we don't create the dispatcher twice
-               cg.notify_handlers.insert(name);
-               /*
-               for (auto param : decl->parameters()) {
-                  if (auto tp = dyn_cast<NamedDecl>(param->getOriginalType().getTypePtr()->getAsCXXRecordDecl())) {
-                     cg.datastream_uses.insert(tp->getQualifiedNameAsString());
-                  }
-               }
-               */
+               cg.notify_handlers.insert(full_notify_name); // insert the method action, so we don't create the dispatcher twice
             }
 
-            //cg.cxx_methods.emplace(name, decl);
             return true;
          }
 
@@ -408,11 +384,14 @@ namespace wasmcdt { namespace cdt {
 
 
          virtual void HandleTranslationUnit(ASTContext &Context) {
+
             codegen& cg = codegen::get();
             auto& src_mgr = Context.getSourceManager();
             auto& f_mgr = src_mgr.getFileManager();
             auto main_fe = f_mgr.getFile(main_file);
-            if (main_fe) {
+            if (main_fe &&
+                main_file.find("libc++") == std::string::npos &&
+                main_file.find("wasmlib") == std::string::npos  ) {
                auto fid = src_mgr.getOrCreateFileID(f_mgr.getFile(main_file), SrcMgr::CharacteristicKind::C_User);
                visitor->set_main_fid(fid);
                visitor->set_main_name(main_fe->getName());
@@ -447,12 +426,10 @@ namespace wasmcdt { namespace cdt {
                   ss << "}\n";
                   ss << "}";
 
-                  std::cout<< "HandleTranslationUnit:------------------------------------------" << std::endl;
-                  std::cout<< ss.str() << std::endl;
-
                   visitor->get_rewriter().InsertTextAfter(ci->getSourceManager().getLocForEndOfFile(fid), ss.str());
                   auto& RewriteBuf = visitor->get_rewriter().getEditBuffer(fid);
                   out << std::string(RewriteBuf.begin(), RewriteBuf.end());
+
                   cg.tmp_files.emplace(main_file, fn.str());
                   out.close();
                } catch (...) {

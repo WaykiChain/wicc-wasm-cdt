@@ -15,6 +15,7 @@
 #include "thread"
 #include "system_error"
 #include "__undef_macros"
+#include <stdint.h>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 

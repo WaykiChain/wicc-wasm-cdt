@@ -126,8 +126,6 @@ namespace wasm {
       }
    }
 
-
-
    template <typename... Ts>
    inline std::string format_str(const char *fmt, const Ts &... vals) {
       auto size = snprintf(nullptr, 0, fmt, vals...);
@@ -145,5 +143,6 @@ namespace wasm {
          internal_use_do_not_use::wasm_assert(false, format_str(fmt, vals...).c_str());
       }
    }
+
 
 } // namespace wasm

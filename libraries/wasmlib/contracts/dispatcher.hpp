@@ -48,6 +48,49 @@ namespace wasm {
       return true;
    }
 
+
+   /**
+    * Unpack the received action and execute the correponding action handler
+    *
+    * @ingroup dispatcher
+    * @tparam T - The contract class that has the correponding action handler, this contract should be derived from wasm::contract
+    * @tparam Q - The namespace of the action handler function
+    * @tparam Args - The arguments that the action handler accepts, i.e. members of the action
+    * @param obj - The contract object that has the correponding action handler
+    * @param func - The action handler
+    * @return int64_t
+    */
+   template<typename T, typename... Args>
+   int64_t execute_action_with_return( regid self, regid code, int64_t (T::*func)(Args...)  ) {
+      size_t size = action_data_size();
+
+      int64_t execute_action_return = -1;
+
+      //using malloc/free here potentially is not exception-safe, although WASM doesn't support exceptions
+      constexpr size_t max_stack_buffer_size = 512;
+      void* buffer = nullptr;
+      if( size > 0 ) {
+         buffer = max_stack_buffer_size < size ? malloc(size) : alloca(size);
+         read_action_data( buffer, size );
+      }
+
+      std::tuple<std::decay_t<Args>...> args;
+      datastream<const char*> ds((char*)buffer, size);
+      ds >> args;
+
+      T inst(self, code, ds);
+
+      auto f2 = [&]( auto... a ){
+         execute_action_return = ((&inst)->*func)( a... );
+      };
+
+      boost::mp11::tuple_apply( f2, args );
+      if ( max_stack_buffer_size < size ) {
+         free(buffer);
+      }
+      return execute_action_return;
+   }
+
   /// @cond INTERNAL
 
  // Helper macro for WASM_DISPATCH_INTERNAL

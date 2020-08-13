@@ -50,6 +50,13 @@ namespace wasm {
 
          __attribute__((wasm_wasm_import))
          uint64_t current_receiver();
+
+         // fixme:V4 support        
+         __attribute__((wasm_wasm_import))
+         uint64_t call(char *serialized_transaction, size_t size);
+
+         __attribute__((wasm_wasm_import))
+         uint64_t call_with_return(char *serialized_transaction, size_t size);
       }
    };
 
@@ -248,6 +255,24 @@ namespace wasm {
       void send() const {
          auto serialize = pack(*this);
          internal_use_do_not_use::send_inline(serialize.data(), serialize.size());
+      }
+
+      /**
+       * fixme:V4 support
+       * Send the transaction as inline transaction
+       */
+      uint64_t call() const {
+         auto serialize = pack(*this);
+         return internal_use_do_not_use::call(serialize.data(), serialize.size());
+      }
+
+      /**
+       * fixme:V4 support
+       * Send the transaction as inline transaction
+       */
+      int64_t call_with_return() const {
+         auto serialize = pack(*this);
+         return internal_use_do_not_use::call(serialize.data(), serialize.size());
       }
 
       /**

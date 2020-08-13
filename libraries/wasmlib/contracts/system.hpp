@@ -9,6 +9,7 @@
 #include "../core/symbol.hpp"
 #include "../core/regid.hpp"
 #include "../core/hash256.hpp"
+#include "../core/exception.hpp"
 
 namespace wasm {
   namespace internal_use_do_not_use {
@@ -78,6 +79,9 @@ namespace wasm {
    wasm::asset get_system_asset_price(symbol base, symbol quote);
 
 
+   void         set_return(const vector<char>& bytes);
+   vector<char> get_return(uint32_t size);
+   void         make_log(regid owner, const string& topic, const vector<char>& value);
 
 
 }

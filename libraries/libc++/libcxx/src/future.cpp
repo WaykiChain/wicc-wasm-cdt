@@ -13,6 +13,7 @@
 
 #include "future"
 #include "string"
+#include <stdint.h>
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 

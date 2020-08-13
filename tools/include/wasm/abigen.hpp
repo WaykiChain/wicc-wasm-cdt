@@ -158,8 +158,11 @@ namespace wasmcdt { namespace cdt {
       void add_struct( const clang::CXXRecordDecl* decl, const std::string& rname="" ) {
          abi_struct ret;
          if ( decl->getNumBases() == 1 ) {
-            ret.base = get_type(decl->bases_begin()->getType());
-            add_struct(decl->bases_begin()->getType().getTypePtr()->getAsCXXRecordDecl());
+            //ignore index_table as table parent
+            //if( decl->bases_begin()->getType().getAsString().find("index") == std::string::npos ){
+               ret.base = get_type(decl->bases_begin()->getType());
+               add_struct(decl->bases_begin()->getType().getTypePtr()->getAsCXXRecordDecl());
+            //}
          }
          std::string sub_name = "";
          for ( auto field : decl->fields() ) {
@@ -187,10 +190,11 @@ namespace wasmcdt { namespace cdt {
       void add_struct( const clang::CXXMethodDecl* decl ) {
          abi_struct new_struct;
          new_struct.name = decl->getNameAsString();
-         for (auto param : decl->parameters() ) {
+         for (auto param : decl->parameters() ) {   
             auto param_type = param->getType().getNonReferenceType().getUnqualifiedType();
             new_struct.fields.push_back({param->getNameAsString(), get_type(param_type)});
             add_type(param_type);
+
          }
          _abi.structs.insert(new_struct);
       }
@@ -224,8 +228,6 @@ namespace wasmcdt { namespace cdt {
          t.type = decl->getNameAsString();
          t.name = name_to_string(name);
          _abi.tables.insert(t);
-
-         //std::cout << "type:" << t.type << " name:" << t.name << std::endl;
       }
 
       void add_clauses( const std::vector<std::pair<std::string, std::string>>& clauses ) {

@@ -170,6 +170,10 @@ namespace wasm {
 
     };
 
+    // inline std::string to_string(const wasm::regid& v){
+    //   return v.to_string();
+    // }
+
 
 } /// regidspace wayki
 

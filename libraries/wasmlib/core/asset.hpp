@@ -444,6 +444,10 @@ namespace wasm {
       WASMLIB_SERIALIZE( asset, (amount)(symbol) )
    };
 
+   // inline std::string to_string(const wasm::asset& v){
+   //    return v.to_string();
+   // }
+
   /**
    *  Extended asset which stores the information of the owner of the asset
    *

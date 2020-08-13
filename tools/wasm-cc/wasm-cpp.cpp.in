@@ -92,8 +92,21 @@ namespace wasm { namespace cdt {
                if (decl->isWasmTable() && abigen::is_wasm_contract(decl, get_abigen_ref().get_contract_name())) {
                   get_abigen_ref().add_struct(decl);
                   get_abigen_ref().add_table(decl);
-                  for (auto field : decl->fields())
+
+                   for (auto field : decl->fields()){
+                     //std::cout <<"field->getType:" << field->getType().getAsString()  << std::endl;
                      get_abigen_ref().add_type( field->getType() );
+                  }
+
+                  // if (  decl->getNumBases() == 1 ) {
+                  //    if( decl->bases_begin()->getType().getAsString().find("index") != std::string::npos ){
+                  //       //std::cout << "base:" << decl->bases_begin()->getType().getAsString() << std::endl;
+                  //       auto* base_decl = static_cast<clang::ClassTemplateSpecializationDecl *>(decl->bases_begin()->getType().getTypePtr()->getAsCXXRecordDecl());
+                  //       get_abigen_ref().add_table(base_decl->getTemplateArgs()[0].getAsIntegral().getExtValue(), decl);
+                  //    }
+                  // }
+
+
                }
             }
 
@@ -168,20 +181,18 @@ void generate(const std::vector<std::string>& base_options, std::string input, s
       throw std::runtime_error("abigen error");
    }
 
-   std::string abi_s;
-   if (get_abigen_ref().is_empty())
-      return;
-   get_abigen_ref().to_json().dump(abi_s);
+   if (!get_abigen_ref().is_empty()) {
+      std::string abi_s;
+      get_abigen_ref().to_json().dump(abi_s);
+      codegen::get().set_abi(abi_s);
+   }
 
-   //std::cout << "contract_name:" <<contract_name << "abigen:" << abigen <<std::endl;
-   //std::cout << abi_s << std::endl;
-
-   // codegen::get().set_abi(abi_s);
-   // tool_run = ctool.run(newFrontendActionFactory<wasm_codegen_frontend_action>().get());
-   // if (tool_run != 0) {
-   //    throw std::runtime_error("codegen error");
-   // }
+   tool_run = ctool.run(newFrontendActionFactory<wasm_codegen_frontend_action>().get());
+   if (tool_run != 0) {
+      throw std::runtime_error("codegen error");
+   }
 }
+
 
 int main(int argc, const char **argv) {
 
@@ -199,11 +210,6 @@ int main(int argc, const char **argv) {
    });
    cl::ParseCommandLineOptions(argc, argv, std::string(COMPILER_NAME)+" (Wasm C++ -> WebAssembly compiler)");
    Options opts = CreateOptions();
-
-  // std::cout << opts.abigen_contract ;
-  // for ( auto s: opts.abigen_resources )
-  //     std::cout <<" " << s;
-  // std::cout << std::endl;
 
    std::vector<std::string> outputs;
    try {
@@ -237,10 +243,6 @@ int main(int argc, const char **argv) {
          new_opts.insert(new_opts.begin(), "-o "+output);
          outputs.push_back(output);
 
-//        for ( auto s: new_opts )
-//            std::cout <<" " << s;
-//        std::cout << std::endl;
-
          if (!wasmcdt::cdt::environment::exec_subprogram("clang-7", new_opts)) {
             llvm::sys::fs::remove(tmp_file);
             return -1;
@@ -269,10 +271,6 @@ int main(int argc, const char **argv) {
          new_opts.insert(new_opts.begin(), std::string(" ")+input+" ");
       }
 
-//       for ( auto s: new_opts )
-//           std::cout <<" " << s;
-//       std::cout << std::endl;
-   
       if (!wasmcdt::cdt::environment::exec_subprogram("wasm-lld", new_opts)) {
          for (auto input : outputs) {
             llvm::sys::fs::remove(input);
