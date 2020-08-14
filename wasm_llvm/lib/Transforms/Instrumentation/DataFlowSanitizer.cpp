@@ -234,7 +234,7 @@ struct TransformedFunction {
   FunctionType* const OriginalType;
 
   /// Type of the function after the transformation.
-  FunctionType* const TransformedType;
+  FunctionType* const TransformedType ;
 
   /// Transforming a function may change the position of arguments.  This
   /// member records the mapping from each argument's old position to its new

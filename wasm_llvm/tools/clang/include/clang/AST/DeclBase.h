@@ -1211,7 +1211,8 @@ public:
                                   NamedDecl *const>;
 
   class iterator : public IteratorBase {
-    value_type SingleElement;
+    //xiaoyu delete warning
+    value_type SingleElement = nullptr;
 
   public:
     iterator() = default;

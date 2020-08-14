@@ -22,7 +22,6 @@ ACTION index::get( uint64_t id, regid owner, symbol_code code)
     wasm::db::get(account1);
     WASM_LOG_FPRINT(true, "account1:%", account1)
 
-
     account_t account2;
     account2.owner = owner;
     wasm::db::get(N(by_owner), account2);
@@ -30,7 +29,7 @@ ACTION index::get( uint64_t id, regid owner, symbol_code code)
 
     account_t account3;
     account3.balance = TO_ASSET(0, code);
-    wasm::db::get(N(by_code),  account3);
+    wasm::db::get(N(by_code), account3);
     WASM_LOG_FPRINT(true, "account3:%", account3)
 }
 

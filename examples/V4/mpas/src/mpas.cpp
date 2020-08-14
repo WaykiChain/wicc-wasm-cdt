@@ -151,7 +151,7 @@ void mpas::add_balance( regid owner, asset value, regid payer )
       to_acnts.emplace( payer, [&]( auto& a ) {
         a.owner   = owner;
         a.balance = value;
-      });
+      }); 
    } else {
       to_acnts.modify( to, wasm::no_payer, [&]( auto& a ) {
         a.balance += value;

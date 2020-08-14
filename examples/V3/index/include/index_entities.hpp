@@ -14,10 +14,10 @@ struct  TABLE_IN_CONTRACT account_t {
    regid    owner;
    asset    balance;
 
-   uint64_t scope() const { return 100; }
+   uint64_t scope() const { return id; }
    uint64_t primary_key()const { return id; }
-   uint64_t get_symbol_code()const { return balance.symbol.code().raw(); }
    regid    get_owner()const{ return owner; }
+   uint64_t get_symbol_code()const { return balance.symbol.code().raw(); }
 
    std::string to_string() const {
       return wasm::to_string("id:% owner:% balance:%", id, owner, balance);
