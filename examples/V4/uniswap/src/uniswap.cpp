@@ -4,6 +4,7 @@
 #include <uniswap_database.hpp>
 #include <return.hpp>
 #include <make_log.hpp>
+#include <exception.hpp>
 
 using namespace wasm;
 
@@ -111,16 +112,16 @@ ACTION uniswap::burn(regid to)
     asset balance0 = BALANCE_OF(g_market->token0, get_self(), g_market->reserve0.symbol);
     asset balance1 = BALANCE_OF(g_market->token1, get_self(), g_market->reserve1.symbol);
 
-    asset liquidity;
-    liquidity = BALANCE_OF(g_market->liquidity_token, to, g_market->liquidity_total_supply.symbol);
+    asset to_burn_liquidity;
+    to_burn_liquidity = BALANCE_OF(g_market->liquidity_token, to, g_market->liquidity_total_supply.symbol);
 
-    asset amount0 = asset(divide_decimal(multiply_decimal(balance0.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION_1), g_market->liquidity_total_supply.amount)), PRECISION_1), balance0.symbol);
-    asset amount1 = asset(divide_decimal(multiply_decimal(balance1.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION_1), g_market->liquidity_total_supply.amount)), PRECISION_1), balance1.symbol);
+    asset amount0 = asset(divide_decimal(multiply_decimal(balance0.amount, divide_decimal(multiply_decimal(to_burn_liquidity.amount, PRECISION_1), g_market->liquidity_total_supply.amount)), PRECISION_1), balance0.symbol);
+    asset amount1 = asset(divide_decimal(multiply_decimal(balance1.amount, divide_decimal(multiply_decimal(to_burn_liquidity.amount, PRECISION_1), g_market->liquidity_total_supply.amount)), PRECISION_1), balance1.symbol);
 
-    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% liquidity:% liquidity_total_supply:% balance0:% balance1:% amount0:% amount1:%", 
-        to, liquidity, g_market->liquidity_total_supply, balance0, balance1, amount0, amount1)     
+    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% to_burn_liquidity:% liquidity_total_supply:% balance0:% balance1:% amount0:% amount1:%", 
+        to, to_burn_liquidity, g_market->liquidity_total_supply, balance0, balance1, amount0, amount1)     
 
-    BURN(g_market->liquidity_token, to, liquidity)
+    BURN(g_market->liquidity_token, to, to_burn_liquidity)
 
     TRANSFER(g_market->token0, get_self(), to, amount0);
     TRANSFER(g_market->token1, get_self(), to, amount1);
@@ -128,14 +129,14 @@ ACTION uniswap::burn(regid to)
     balance0 = BALANCE_OF(g_market->token0, get_self(), g_market->reserve0.symbol);
     balance1 = BALANCE_OF(g_market->token1, get_self(), g_market->reserve1.symbol);
 
-    g_market->liquidity_total_supply = g_market->liquidity_total_supply - liquidity;
+    g_market->liquidity_total_supply = g_market->liquidity_total_supply - to_burn_liquidity;
 
     _update(balance0, balance1);
 
-    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% liquidity:% liquidity_total_supply:% balance0:% balance1:% amount0:% amount1:%", 
-        to, liquidity, g_market->liquidity_total_supply, balance0, balance1) 
+    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% to_burn_liquidity:% liquidity_total_supply:% balance0:% balance1:% amount0:% amount1:%", 
+        to, to_burn_liquidity, g_market->liquidity_total_supply, balance0, balance1, amount0, amount1) 
 
-    set_return(wasm::pack<asset>(liquidity));
+    set_return(wasm::pack<asset>(to_burn_liquidity));
 }
 
 ACTION uniswap::swap(asset amount0_out, asset amount1_out, regid to)
@@ -149,7 +150,6 @@ ACTION uniswap::swap(asset amount0_out, asset amount1_out, regid to)
     check(amount0_out < g_market->reserve0  || amount1_out < g_market->reserve1, "insufficient liquidity");
 
     WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% reserve0:% reserve1:%", to, g_market->reserve0, g_market->reserve1) 
-
 
     asset balance0, balance1;
     {
@@ -167,12 +167,17 @@ ACTION uniswap::swap(asset amount0_out, asset amount1_out, regid to)
         asset balance0_adjusted = balance0 * 1000 - amount0_in * 3;
         asset balance1_adjusted = balance1 * 1000 - amount1_in * 3;
 
-        check(multiply_decimal(balance0_adjusted.amount, balance1_adjusted.amount) >= multiply_decimal(g_market->reserve0.amount, g_market->reserve1.amount) * 1000 * 1000, "invalid amount in");
+        auto index0 = multiply_decimal(balance0_adjusted.amount, balance1_adjusted.amount);
+        auto index1 = multiply_decimal(g_market->reserve0.amount, g_market->reserve1.amount) * 1000 * 1000;
+
+        check(index0 >= index1, uniswap_failed{}, "invalid amount in balance0_adjusted:% balance1_adjusted:% index0:% index1:%", 
+            balance0_adjusted, balance1_adjusted, index0, index1);
+
+        WASM_LOG_FPRINT(UNISWAP_DEBUG, "to:% amount0_in:% amount1_in:% amount0_out:% amount1_out:% balance0:% balance1:% index0:% index1:%", 
+        to, amount0_in, amount1_in, amount0_out, amount1_out, balance0, balance1, index0, index1) 
+
     }
-
-    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% amount0_in:% amount1_in:% amount0_out:% amount1_out:% balance0:% balance1:%", 
-        to, amount0_in, amount1_in, amount0_out, amount1_out, balance0, balance1) 
-
+    
     _update(balance0, balance1);
 }
 
