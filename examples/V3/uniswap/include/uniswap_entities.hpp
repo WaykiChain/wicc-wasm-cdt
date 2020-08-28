@@ -1,7 +1,7 @@
 #include <wasm.hpp>
 #include <asset.hpp>
 #include <inline_transaction.hpp>
-#include <db2.hpp>
+#include <db.hpp>
 
 #include <string>
 using namespace wasm;

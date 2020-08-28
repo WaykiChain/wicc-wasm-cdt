@@ -1,9 +1,5 @@
 #include <wasm.hpp>
 #include <asset.hpp>
-#include <inline_transaction.hpp>
-#include <uniswap_database.hpp>
-#include <return.hpp>
-#include <make_log.hpp>
 
 #include <string>
 using namespace wasm;
@@ -16,7 +12,7 @@ namespace wasm {
        public:
            using contract::contract;
 
-           ACTION init(regid token0, regid token1, symbol symbol0, symbol symbol1, symbol supply_symbol, regid token_contract);
+           ACTION init(regid token0, regid token1, symbol symbol0, symbol symbol1, symbol supply_symbol, regid liquidity_token);
            ACTION mint(regid to);   
            ACTION burn(regid to);    
            ACTION swap(asset amount0_out, asset amount1_out, regid to);     
@@ -24,7 +20,7 @@ namespace wasm {
            ACTION sync(); 
            ACTION get_market();
 
-       public:
-       	   void update(asset balance0, asset balance1);
+       private:
+       	   void _update(asset balance0, asset balance1);
    };
 } /// namespace wasm
