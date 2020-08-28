@@ -18,6 +18,7 @@ namespace wasm {
            ACTION swap(asset amount0_out, asset amount1_out, regid to);     
            ACTION skim(regid to);  
            ACTION sync(); 
+           ACTION close(bool closed);
            ACTION get_market();
 
        private:

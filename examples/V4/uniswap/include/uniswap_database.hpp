@@ -38,7 +38,7 @@ struct TABLE_IN_CONTRACT market_t {
                                 id, token0, token0, liquidity_token, liquidity_total_supply, reserve0, reserve0, closed);
    }   
 
-   typedef index_table<"markets"_n, market_t, uint64_t> table_t;
+   typedef index_table<"market"_n, market_t, uint64_t> table_t;
    WASM_DB_TABLE_TYPE_DEFINITION(table_t)
 
    WASMLIB_SERIALIZE( market_t, (id)(token0)(token1)(liquidity_token)(liquidity_total_supply)
