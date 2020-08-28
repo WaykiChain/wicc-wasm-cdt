@@ -11,7 +11,7 @@ std::optional<market_t> global_market;
 
 void uniswap::_update(asset balance0, asset balance1)
 {
-    WASM_LOG_FPRINT(UNISWAP_DEBUG,"balance0:% balance1:%", balance0, balance1)
+    WASM_LOG_FPRINT(UNISWAP_DEBUG, "balance0:% balance1:%", balance0, balance1)
 
     check(global_market.has_value(), "market does not exist");
 
@@ -19,8 +19,8 @@ void uniswap::_update(asset balance0, asset balance1)
     uint64_t       time_elapsed    = (block_timestamp - global_market->block_timestamp_last).count();
 
     if(time_elapsed > 0 && global_market->reserve0.amount != 0 && global_market->reserve1.amount != 0){
-        global_market->price0_cumulative_last += divide_decimal(multiply_decimal(global_market->reserve0.amount, PRECISION), global_market->reserve1.amount) * time_elapsed;
-        global_market->price1_cumulative_last += divide_decimal(multiply_decimal(global_market->reserve1.amount, PRECISION), global_market->reserve0.amount) * time_elapsed;
+        global_market->price0_cumulative_last += divide_decimal(multiply_decimal(global_market->reserve0.amount, PRECISION_1), global_market->reserve1.amount) * time_elapsed;
+        global_market->price1_cumulative_last += divide_decimal(multiply_decimal(global_market->reserve1.amount, PRECISION_1), global_market->reserve0.amount) * time_elapsed;
     }
 
     global_market->reserve0             = balance0;
@@ -29,23 +29,26 @@ void uniswap::_update(asset balance0, asset balance1)
 
 }
 
-ACTION uniswap::init(regid token0, regid token1, symbol symbol0, symbol symbol1, symbol supply_symbol, regid liquidity_token)
+ACTION uniswap::init(regid token0, regid token1, symbol symbol0, symbol symbol1, regid liquidity_token)
 {
     require_auth( get_maintainer(get_self()));
     check( symbol0.raw() < symbol1.raw(), "symbol1 must be > symbol0" );
 
     check(!global_market.has_value(), "market already exist");
 
-    global_market->token0               = token0;
-    global_market->token1               = token1;
+    market_t market(get_self().value);
+    market.token0               = token0;
+    market.token1               = token1;
 
-    global_market->reserve0             = asset(0, symbol0);
-    global_market->reserve1             = asset(0, symbol1);
-    global_market->block_timestamp_last = 0;
+    market.reserve0             = asset(0, symbol0);
+    market.reserve1             = asset(0, symbol1);
+    market.block_timestamp_last = 0;
 
-    global_market->liquidity_token         = liquidity_token;
-    global_market->liquidity_total_supply  = asset(0, supply_symbol);
-    global_market->closed                  = false;
+    market.liquidity_token         = liquidity_token;
+    market.liquidity_total_supply  = TO_ASSET(0, add_symbol(symbol0, symbol1));
+    market.closed                  = false;
+
+    global_market = market;
 
 }
 
@@ -67,10 +70,10 @@ ACTION uniswap::mint(regid to)
     int64_t liquidity;
     if(global_market->liquidity_total_supply.amount == 0){
 
-        liquidity = sqrt(multiply_decimal(amount0.amount, amount1.amount)) - MINIMUM_LIQUIDITY * PRECISION;
+        liquidity = sqrt(multiply_decimal(amount0.amount, amount1.amount)) - MINIMUM_LIQUIDITY * PRECISION_1;
 
-        MINT(global_market->liquidity_token, get_self(), asset(MINIMUM_LIQUIDITY * PRECISION, global_market->liquidity_total_supply.symbol));     
-        global_market->liquidity_total_supply = asset(MINIMUM_LIQUIDITY * PRECISION, global_market->liquidity_total_supply.symbol);   
+        MINT(global_market->liquidity_token, get_self(), asset(MINIMUM_LIQUIDITY * PRECISION_1, global_market->liquidity_total_supply.symbol));     
+        global_market->liquidity_total_supply = asset(MINIMUM_LIQUIDITY * PRECISION_1, global_market->liquidity_total_supply.symbol);   
 
     }else{
 
@@ -108,8 +111,8 @@ ACTION uniswap::burn(regid to)
     asset liquidity;
     liquidity = BALANCE_OF(global_market->liquidity_token, to, global_market->liquidity_total_supply.symbol);
 
-    asset amount0 = asset(divide_decimal(multiply_decimal(balance0.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION), global_market->liquidity_total_supply.amount)), PRECISION), balance0.symbol);
-    asset amount1 = asset(divide_decimal(multiply_decimal(balance1.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION), global_market->liquidity_total_supply.amount)), PRECISION), balance1.symbol);
+    asset amount0 = asset(divide_decimal(multiply_decimal(balance0.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION_1), global_market->liquidity_total_supply.amount)), PRECISION_1), balance0.symbol);
+    asset amount1 = asset(divide_decimal(multiply_decimal(balance1.amount, divide_decimal(multiply_decimal(liquidity.amount, PRECISION_1), global_market->liquidity_total_supply.amount)), PRECISION_1), balance1.symbol);
 
     WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% liquidity:% liquidity_total_supply:% balance0:% balance1:% amount0:% amount1:%", 
         to, liquidity, global_market->liquidity_total_supply, balance0, balance1, amount0, amount1)     
@@ -142,8 +145,7 @@ ACTION uniswap::swap(asset amount0_out, asset amount1_out, regid to)
 
     check(amount0_out < global_market->reserve0  || amount1_out < global_market->reserve1, "insufficient liquidity");
 
-    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% reserve0:% reserve1:%", 
-        to, global_market->reserve0, global_market->reserve1) 
+    WASM_LOG_FPRINT(UNISWAP_DEBUG,"to:% reserve0:% reserve1:%", to, global_market->reserve0, global_market->reserve1) 
 
 
     asset balance0, balance1;
@@ -193,13 +195,11 @@ ACTION uniswap::get_market(){
 
     check(global_market.has_value(), "market does not exist"); 
 
-    WASM_LOG_PRINT(true, "market:%", global_market.value());
+    WASM_LOG_FPRINT(true, "market:%", global_market.value());
     set_return(wasm::pack<market_t>(global_market.value()));
 }
 
 extern "C" bool pre_dispatch(regid self, regid original_receiver, name action) {
-   //print_f("pre_dispatch : % % %\n", self, original_receiver, action);
-
    market_t market(self.value);
    if(wasm::db::get(market)) global_market = market;
 
@@ -207,7 +207,6 @@ extern "C" bool pre_dispatch(regid self, regid original_receiver, name action) {
 }
 
 extern "C" void post_dispatch(regid self, regid original_receiver, name action) {
-   //print_f("post_dispatch : % % %\n", self, original_receiver, action);
   if(global_market.has_value()) wasm::db::set(global_market.value());
 
 }

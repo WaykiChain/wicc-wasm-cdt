@@ -21,9 +21,10 @@ namespace wasm { namespace db {
 
     constexpr static inline regid payer_reserved{};
 
-    // constexpr static uint64_t SECONDARY_KEY_PREFIX = 0x000000000000000FULL;
-    constexpr static uint64_t PRIMARY_KEY_PREFIX   = 0x00;
-    constexpr static uint64_t SECONDARY_KEY_PREFIX = 0x01;
+    //for debug before gettable updated
+    constexpr static uint64_t SECONDARY_KEY_PREFIX = 0x000000000000000FULL;
+    // constexpr static uint64_t PRIMARY_KEY_PREFIX   = 0x00;
+    // constexpr static uint64_t SECONDARY_KEY_PREFIX = 0x01;
 
     template<class Class, typename Type, Type (Class::*PtrToMemberFunction)()const>
     struct const_mem_fun
@@ -137,7 +138,8 @@ namespace wasm { namespace db {
 
         typename ObjectType::table_type table;
 
-        vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), object.primary_key()));
+        //vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), object.primary_key()));
+        vector<char> key = pack(std::tuple(table.table_name(), object.primary_key()));
 		uint32_t key_len = key.size();
 
 		auto value_len = db_get(key.data(), key_len, NULL, 0);
@@ -155,7 +157,8 @@ namespace wasm { namespace db {
 
         typename ObjectType::table_type table;
 
-        vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), primary));
+        //vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), primary));
+        vector<char> key = pack(std::tuple(table.table_name(), primary));
         uint32_t key_len = key.size();
 
         auto value_len = db_get(key.data(), key_len, NULL, 0);
@@ -173,7 +176,8 @@ namespace wasm { namespace db {
 
         typename ObjectType::table_type table;
 
-        vector<char> key   = pack(std::tuple(PRIMARY_KEY_PREFIX,table.table_name(), object.primary_key()));
+        //vector<char> key   = pack(std::tuple(PRIMARY_KEY_PREFIX,table.table_name(), object.primary_key()));
+        vector<char> key   = pack(std::tuple(table.table_name(), object.primary_key()));
 		vector<char> value = pack(object);
 
         ObjectType old_object;
@@ -203,7 +207,8 @@ namespace wasm { namespace db {
 
         typename ObjectType::table_type table;
 
-        vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), object.primary_key()));
+        //vector<char> key = pack(std::tuple(PRIMARY_KEY_PREFIX, table.table_name(), object.primary_key()));
+        vector<char> key = pack(std::tuple( table.table_name(), object.primary_key()));
 
         // bool has_object = wasm::db::get(object);
         // if(has_object){

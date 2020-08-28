@@ -1,18 +1,9 @@
 #include <token.hpp>
+#include <wasm_log.hpp>
+#include <make_log.hpp>
+#include <return.hpp>
 
 using namespace wasm;
-#define WASM_FUNCTION_PRINT_LENGTH 50
-#define WASM_LOG_PRINT( debug,  ... ) {     \
-if ( debug ) {                               \
-   std::string str = std::string(__FILE__); \
-   str += std::string(":");                 \
-   str += std::to_string(__LINE__);         \
-   str += std::string(":[");                \
-   str += std::string(__FUNCTION__);        \
-   str += std::string("]");                 \
-   while(str.size() <= WASM_FUNCTION_PRINT_LENGTH) str += std::string(" ");\
-   print(str);                                                             \
-   print( __VA_ARGS__ ); }}
 
 
 ACTION token::create( regid  issuer,
@@ -204,7 +195,8 @@ ACTION2 token::balance_of( regid owner, const symbol& symbol )
 
     make_log(owner, "account", wasm::pack(from));
 
-    //set_return(wasm::pack(from.balance));
+    set_return(wasm::pack(from.balance));
+    
     return (int64_t)from.balance.amount;
 
 }

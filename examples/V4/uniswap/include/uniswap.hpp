@@ -12,7 +12,7 @@ namespace wasm {
        public:
            using contract::contract;
 
-           ACTION init(regid token0, regid token1, symbol symbol0, symbol symbol1, symbol supply_symbol, regid liquidity_token);
+           ACTION init(regid token0, regid token1, symbol symbol0, symbol symbol1, regid liquidity_token);
            ACTION mint(regid to);   
            ACTION burn(regid to);    
            ACTION swap(asset amount0_out, asset amount1_out, regid to);     
