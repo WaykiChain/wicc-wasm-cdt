@@ -1,0 +1,192 @@
+#include <ampl.hpp>
+#include <ampl_utils.hpp>
+#include <inline_transaction.hpp>
+#include <ampl_database.hpp>
+#include <return.hpp>
+#include <make_log.hpp>
+#include <exception.hpp>
+
+using namespace wasm;
+
+std::optional<global_t> g_ampl;
+
+uint64_t ampl::_get_oracle_data(regid oracle)
+{
+     return GET_ORACLE_DATA(oracle);
+}
+
+uint64_t ampl::_rebase(uint64_t epoch, int64_t supply_delta)
+{
+    // if(supply_delta < 0)
+    //     g_ampl->total_supply.balance -= -supply_delta;
+    // else 
+    //     g_ampl->total_supply.balance += supply_delta
+    g_ampl->total_supply.balance += supply_delta;
+    g_ampl->gons_per_fragment     = divide_decimal(TOTAL_GONS, g_ampl->total_supply.balance.amount);
+
+    return g_ampl->total_supply.balance.amount;
+
+}
+
+uint64_t ampl::_compute_supply_delta(uint64_t exchange_rate, int64_t cpi_rate)
+{
+    // if (withinDeviationThreshold(rate, targetRate)) {
+    //         return 0;
+    // }
+
+    return divide_decimal(multiply_decimal(g_ampl->total_supply.balance.amount, exchange_rate),cpi_rate);
+}
+
+
+ACTION ampl::init(regid owner, symbol_code code, uint64_t base_cpi, regid cpi_oracle, regid market_oracle)
+{
+    require_auth( get_maintainer(get_self()));
+    check( symbol0.raw() < symbol1.raw(), "symbol1 must be > symbol0" );
+
+    check(!g_ampl.has_value(), "ampl already initialize");
+
+    global_t storage(get_self().value);
+    storage.total_supply        = TO_ASSET(INITIAL_FRAGMENTS_SUPPLY, code);
+    storage.gons_per_fragment   = divide_decimal(TOTAL_GONS, storage.total_supply.balance.amount);
+
+    storage.min_rebase_time_interval_sec = ONE_DAY;
+    storage.rebase_window_offset_sec     = TWO_HOURS;
+    storage.rebase_window_length_sec     = FIFTEEN_MINUTES;
+    storage.last_rebase_time_stamp_sec   = 0;
+    storage.spoch                        = 0;
+    storage.base_cpi                     = base_cpi;
+    storage.rebase_lag                   = 30;
+
+    storage.cpi_oracle                   = cpi_oracle;
+    storage.market_oracle                = market_oracle;
+
+    WASM_LOG_FPRINT(AMPL_DEBUG, "storage:%", storage)
+    g_ampl = storage;
+
+    account _owner(owner.value);
+    check(!wasm::db::get(_owner), "% already exist", owner);
+
+    _owner.balance = TO_ASSET(TOTAL_GONS, code);
+    wasm::db::set(_owner);
+}
+
+ACTION ampl::rebase()
+{
+    check(g_ampl.has_value(), "ampl was not initialized");
+    require_auth( get_maintainer(get_self()));
+    
+    uint64_t now = current_block_time();
+  
+    check(g_ampl->last_rebase_time_stamp_sec + g_ampl->min_rebase_time_interval_sec < now)
+
+    g_ampl->last_rebase_time_stamp_sec = now - now % g_ampl->min_rebase_time_interval_sec + g_ampl->rebase_window_offset_sec;
+
+    uint64_t cpi           = _get_oracle_data(g_ampl->cpi_oracle);
+    uint64_t cpi_rate      = multiply_decimal(cpi, g_ampl->base_cpi);
+    uint64_t exchange_rate = _get_oracle_data(g_ampl->market_oracle);
+    int64_t  supply_delta  = _compute_supply_delta(exchange_rate, cpi_rate) / g_ampl->rebase_lag;
+
+    _rebase(++g_ampl->epoch, supply_delta);
+
+}
+
+
+ACTION ampl::transfer( regid   from,
+                       regid   to,
+                       asset   quantity,
+                       string  memo )
+{
+    check(g_ampl.has_value(), "ampl was not initialized");
+
+    check( from != to, "cannot transfer to self" );
+    require_auth( from );
+    check( is_account( to ), "to account does not exist");
+
+    notify_recipient( from );
+    notify_recipient( to );
+
+    check( quantity.is_valid(), "invalid quantity" );
+    check( quantity.amount > 0, "must transfer positive quantity" );
+    check( quantity.symbol == g_ampl->total_supply.symbol, "symbol precision mismatch" );
+    check( memo.size() <= 256, "memo has more than 256 bytes" );
+
+    auto payer = has_auth( to ) ? to : from;
+
+    _sub_balance( from, quantity );
+    _add_balance( to, quantity, payer );
+}
+
+void ampl::_sub_balance( regid owner, asset value ) {
+   account_t _owner( owner.value );
+   check( wasm::db::get(_owner), "no account object % found", owner );
+  
+   uint64_t gon_value = multiply_decimal(value.amount, g_ampl->gons_per_fragment);
+
+   check( _owner.balance >= gon_value, "overdrawn balance from.balance:% and gon_value:%", _owner.balance, gon_value );
+   _owner.balance -= gon_value;
+   wasm::db::set(_owner);
+}
+
+void ampl::_add_balance( regid owner, asset value, regid payer )
+{
+   account_t _owner( owner.value );
+   wasm::db::get(_owner);
+   
+   uint64_t gon_value = multiply_decimal(value.amount, g_ampl->gons_per_fragment);
+
+   _owner.balance += gon_value;
+   wasm::db::set(_owner);
+}
+
+ACTION ampl::total_supply()
+{
+    check(g_ampl.has_value(), "ampl was not initialized");
+
+    WASM_LOG_FPRINT(AMPL_DEBUG, "total_supply:%", g_ampl.total_supply);
+    set_return(wasm::pack(g_ampl.total_supply));
+}
+
+ACTION ampl::balance_of(regid owner)
+{
+    check(g_ampl.has_value(), "ampl was not initialized");
+    account _owner(owner.value);
+    wasm::db::get(_owner);//account does not exist will return 0
+    WASM_LOG_FPRINT(AMPL_DEBUG, "_owner:%", _owner.balance);
+    set_return(wasm::pack(_owner.balance));
+}
+
+// ACTION ampl::get_ampl(){
+
+//     check(g_ampl.has_value(), "global does not exist"); 
+
+//     WASM_LOG_FPRINT(true, "global:%", g_ampl.value());
+//     set_return(wasm::pack<global_t>(g_ampl.value()));
+// }
+
+ACTION ampl::set_oracle(regid cpi, regid market){
+    check(g_ampl.has_value(), "ampl was not initialized");
+
+    g_ampl->cpi_oracle    = cpi;
+    g_ampl->market_oracle = market;   
+}
+
+
+ACTION ampl::set_lag(uint64_t rebase_lag){
+    check(g_ampl.has_value(), "ampl was not initialized");
+
+    g_ampl->rebase_lag    = rebase_lag;
+}
+
+extern "C" bool pre_dispatch(regid self, regid original_receiver, name action) {
+   global_t storage(self.value);
+   if(wasm::db::get(global_t)) g_ampl = storage;
+
+   return true;
+}
+
+extern "C" void post_dispatch(regid self, regid original_receiver, name action) {
+  if(g_ampl.has_value()) wasm::db::set(g_ampl.value());
+
+}
+
+
