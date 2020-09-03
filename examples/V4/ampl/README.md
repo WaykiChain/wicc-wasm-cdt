@@ -1,4 +1,4 @@
-uniswap
+ampl
 -----------
 
  - How to Build 
@@ -10,7 +10,7 @@ $ cmake ..
 $ make
 ```
  - After build 
-   - The built smart contract is under the 'uniswap' directory in the 'build' directory
-   - You can find uniswap.wasm and uniswap.abi in the './build/uniswap' directory
+   - The built smart contract is under the 'ampl' directory in the 'build' directory
+   - You can find ampl.wasm and ampl.abi in the './build/ampl' directory
 
 
