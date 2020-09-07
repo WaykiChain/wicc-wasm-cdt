@@ -13,12 +13,12 @@ namespace wasm {
 
 struct TABLE_IN_CONTRACT market_t{
     uint128_t id;
-    regid     token0;
-    regid     token1;
-    regid     liquidity_token;
-    asset     liquidity_total_supply;
+    regid     bank0;
+    regid     bank1;
     asset     reserve0;
     asset     reserve1;
+    regid     liquidity_bank;
+    asset     liquidity_total_supply;
     time_point_sec  block_timestamp_last ;//reserved
     time_point_sec  skim_last_time       ;
     time_point_sec  sync_last_time       ;
@@ -39,28 +39,27 @@ struct TABLE_IN_CONTRACT market_t{
     uint64_t scope() const { return uint64_t(id >> 64); }
     uint128_t primary_key() const {  return id ; }
     std::string to_string() const {
-        return wasm::to_string("id:% token0:% token1:% liquidity_token:% liquidity_total_supply:% reserve0:% reserve1:% closed:%", 
-                                id, token0, token0, liquidity_token, liquidity_total_supply, reserve0, reserve0, closed);
+        return wasm::to_string("id:% bank0:% bank1:% liquidity_bank:% liquidity_total_supply:% reserve0:% reserve1:% closed:%", 
+                                id, bank0, bank0, liquidity_bank, liquidity_total_supply, reserve0, reserve0, closed);
     }   
     void print() const {wasm::print(to_string());}
 
-     
     typedef index_table<"markets"_n, market_t, uint128_t, 
                         indexed_by<"by_symbol"_n, const_mem_fun<market_t, uint64_t, &wasm::market_t::get_symbol>>> table_t;
     WASM_DB_TABLE_TYPE_DEFINITION(table_t)
 
-    WASMLIB_SERIALIZE( market_t, (id)(token0)(token1)(liquidity_token)(liquidity_total_supply)
-                                 (reserve0)(reserve1)(block_timestamp_last)(skim_last_time)(sync_last_time)(closed)
+    WASMLIB_SERIALIZE( market_t, (id)(bank0)(bank1)(reserve0)(reserve1)
+                                 (liquidity_bank)(liquidity_total_supply)
+                                 (block_timestamp_last)(skim_last_time)(sync_last_time)(closed)
                                  (price0_cumulative_last)(price1_cumulative_last))
-
 };
 
 struct TABLE_IN_CONTRACT mint_action_t {
     regid     owner;
     uint64_t  nonce;
     uint128_t market_id;
-    regid     token0;
-    regid     token1;
+    regid     bank0;
+    regid     bank1;
     asset     amount0_in;
     asset     amount1_in;
 
@@ -72,8 +71,8 @@ struct TABLE_IN_CONTRACT mint_action_t {
     uint64_t scope() const { return owner.value; }
     uint128_t primary_key()const { return (uint128_t)owner.value << 64 | (uint128_t)nonce; }
     std::string to_string() const {
-        return wasm::to_string("owner:% nonce:% market_id:% token0:% token1:% amount0_in:% amount1_in:% closed:%", 
-                        owner, nonce, market_id, token0, token1, amount0_in, amount1_in, closed);
+        return wasm::to_string("owner:% nonce:% market_id:% bank0:% bank1:% amount0_in:% amount1_in:% closed:%", 
+                        owner, nonce, market_id, bank0, bank1, amount0_in, amount1_in, closed);
     }
     void print() const {wasm::print(to_string());}
 
@@ -81,28 +80,8 @@ struct TABLE_IN_CONTRACT mint_action_t {
     WASM_DB_TABLE_TYPE_DEFINITION(table_t)
 
     WASMLIB_SERIALIZE( mint_action_t, (owner)(nonce)(market_id)
-                                      (token0)(token1)(amount0_in)(amount1_in)
+                                      (bank0)(bank1)(amount0_in)(amount1_in)
                                       (create_time)(closed))
-};
-
-struct TABLE_IN_CONTRACT account_t {
-    regid    owner;
-    asset    balance;
-
-    account_t(){}
-    account_t(uint64_t o, uint64_t s):owner(regid(o)),balance(asset(0,symbol(s))){}
-    uint64_t scope() const { return owner.value; }
-    uint128_t primary_key()const { return (uint128_t)owner.value << 64 | (uint128_t)balance.symbol.code().raw(); }
-
-    std::string to_string() const{
-        return wasm::to_string("owner:% asset:%", owner, balance);        
-    }
-    void print() const {wasm::print(to_string());}
-
-    typedef wasm::db::index_table<"accounts"_n, account_t, uint128_t> table_t;
-    WASM_DB_TABLE_TYPE_DEFINITION(table_t)
-
-    WASMLIB_SERIALIZE( account_t, (owner)(balance))
 };
 
 

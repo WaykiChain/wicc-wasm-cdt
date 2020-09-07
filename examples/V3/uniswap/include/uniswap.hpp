@@ -18,8 +18,8 @@ namespace wasm {
            [[wasm::action]]
            void create(regid token0, regid token1, symbol symbol0, symbol symbol1, regid liquidity_token);
 
-           [[wasm::action]] 
-           void burn(std::string market_id, regid to);  
+           // [[wasm::action]] 
+           // void burn(std::string market_id, regid to);  
 
            [[wasm::action]]
            void skim(std::string market_id, regid to, asset balance0, asset balance1);  
@@ -42,6 +42,7 @@ namespace wasm {
 
        private:
            void _mint(const uint128_t& market_id, uint64_t step, regid to, asset quant, uint64_t nonce);
+           void _burn(const uint128_t& market_id, asset quant, regid to);  
            void _swap(const uint128_t& market_id, asset quant, asset amount_out, regid to);
            void _mint_liquidity(regid liquidity_token, regid to, asset quant);
            void _burn_liquidity(regid liquidity_token, regid from, asset quant);

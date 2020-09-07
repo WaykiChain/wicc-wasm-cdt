@@ -1,9 +1,10 @@
 
 static constexpr uint64_t UNISWAP_MINT_STEP1 = 1;
 static constexpr uint64_t UNISWAP_MINT_STEP2 = 2;
-static constexpr uint64_t MINIMUM_LIQUIDITY = 10*10*10;
-static constexpr int128_t PRECISION_1       = 100000000; 
-static constexpr uint64_t PRECISION         = 8; 
+static constexpr uint64_t MINIMUM_LIQUIDITY  = 10*10*10;
+static constexpr int128_t PRECISION_1        = 100000000; 
+static constexpr uint64_t PRECISION          = 8; 
+static constexpr bool     UNISWAP_DEBUG      = true; 
 
 WASM_DECLARE_EXCEPTION( uniswap_failed, 1000000, "uniswap contract failed" )
 
