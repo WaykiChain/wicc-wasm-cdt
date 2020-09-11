@@ -51,8 +51,8 @@ struct TABLE_IN_CONTRACT account_t {
     regid    id;
     uint64_t balance = 0;
 
-    global_t(){}
-    global_t(uint64_t r):id(regid(r)){}
+    account_t(){}
+    account_t(uint64_t r):id(regid(r)){}
     uint64_t scope() const { return id.value; }
     uint64_t primary_key() const { return id.value; }
 
