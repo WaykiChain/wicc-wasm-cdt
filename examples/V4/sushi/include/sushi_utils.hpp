@@ -12,10 +12,6 @@ WASM_DECLARE_EXCEPTION( contract_failed, 1000000, "contract failed" )
 #define TO_ASSET( amount, code ) \
     asset(amount, symbol(code, PRECISION))
 
-
-#define GET_ORACLE_DATA(oracle) \
-    get_return_wasm<uint64_t>(wasm::transaction{oracle, name("get_data"), std::vector<permission>{{get_self(), name("wasmio_code")}}, std::tuple<regid, class symbol>(owner, sym)}.call())
-
 #define BALANCE_OF(token, owner, sym) \
     get_return_wasm<asset>(wasm::transaction{token, name("balance_of"), std::vector<permission>{{get_self(), name("wasmio_code")}}, std::tuple<regid, class symbol>(owner, sym)}.call())
 
@@ -32,13 +28,15 @@ WASM_DECLARE_EXCEPTION( contract_failed, 1000000, "contract failed" )
      trx.call();}
 
 
-uint128_t divide_decimal(uint128_t a, uint128_t b){
-    return a / b;
-}
+// uint128_t divide_decimal(uint128_t a, uint128_t b){
+//     return a / b;
+// }
 
-uint128_t multiply_decimal(uint128_t a, uint128_t b){
-    return a * b;
-}
+// uint128_t multiply_decimal(uint128_t a, uint128_t b){
+//     return a * b;
+// }
+inline uint128_t divide_decimal(uint128_t a, uint128_t b){return a * PRECISION_1 / b;}
+inline uint128_t multiply_decimal(uint128_t a, uint128_t b){return a * b / PRECISION_1;}
 
 inline uint128_t sqrt(uint128_t y) {
     if(y > 3) {
