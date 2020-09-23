@@ -7,7 +7,7 @@ using namespace wasm;
 
 ACTION uniswap::create(regid bank0, regid bank1, symbol symbol0, symbol symbol1, regid liquidity_bank){
 
-    require_auth( get_maintainer(get_self()));
+    //require_auth( get_maintainer(get_self()));
     check( symbol0.raw() < symbol1.raw(), uniswap_failed{}, "symbol0:% must be < symbol1:%", symbol0, symbol1);
 
     market_t market(symbol0.raw(), symbol1.raw());  
@@ -313,7 +313,7 @@ ACTION uniswap::get_market(std::string market_id)
 ACTION uniswap::get_action(regid to, uint64_t nonce)
 {
     mint_action_t mint_action(to.value, nonce);
-    check(wasm::db::get(mint_action), uniswap_failed{}, "mint_action step1 does not exist"); 
+    check(wasm::db::get(mint_action), uniswap_failed{}, "mint_action does not exist"); 
 
     WASM_LOG_FPRINT(true, "mint_action:%", mint_action)  
 }

@@ -29,8 +29,8 @@ inline string add_symbol(symbol symbol0, symbol symbol1){
     {wasm::transaction trx(token, name("transfer"), std::vector<permission>{{from, name("wasmio_code")}}, std::tuple<regid, regid, asset, string>(from, to, quantity, "transfer"));\
      trx.send();}
 
-inline uint128_t divide_decimal(uint128_t a, uint128_t b){return a / b;}
-inline uint128_t multiply_decimal(uint128_t a, uint128_t b){return a * b;}
+inline uint128_t divide_decimal(uint128_t a, uint128_t b){return a * PRECISION_1 / b;}
+inline uint128_t multiply_decimal(uint128_t a, uint128_t b){return a * b / PRECISION_1;}
 
 inline uint128_t sqrt(uint128_t y) {
     if(y > 3) {

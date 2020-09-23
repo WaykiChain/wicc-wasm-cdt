@@ -197,6 +197,14 @@ ACTION sushi::get_pending(uint64_t pid, regid owner){
 
 }
 
+ACTION sushi::dev(regid dev_address){
+
+    check(g_sushi.has_value(), "sushi was not initialized");
+    require_auth( g_sushi->dev_address ); 
+
+    g_sushi->dev_address = dev_address;
+}
+
 ACTION sushi::get_pool(uint64_t pid){
 
     check(g_sushi.has_value(), "sushi was not initialized");

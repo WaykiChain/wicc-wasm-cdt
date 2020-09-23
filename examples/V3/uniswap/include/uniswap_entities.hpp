@@ -19,9 +19,13 @@ struct TABLE_IN_CONTRACT market_t{
     asset     reserve1;
     regid     liquidity_bank;
     asset     liquidity_total_supply;
-    time_point_sec  block_timestamp_last ;//reserved
-    time_point_sec  skim_last_time       ;
-    time_point_sec  sync_last_time       ;
+    // time_point_sec  block_timestamp_last ;//reserved
+    // time_point_sec  skim_last_time       ;
+    // time_point_sec  sync_last_time       ;
+
+    uint64_t  block_timestamp_last ;//reserved
+    uint64_t  skim_last_time       ;
+    uint64_t  sync_last_time       ;  
 
     uint128_t  price0_cumulative_last = 0;
     uint128_t  price1_cumulative_last = 0;
@@ -63,8 +67,9 @@ struct TABLE_IN_CONTRACT mint_action_t {
     asset     amount0_in;
     asset     amount1_in;
 
-    time_point_sec create_time;
-    bool           closed;
+    //time_point_sec create_time;
+    uint64_t create_time;
+    bool     closed;
 
     mint_action_t(){}
     mint_action_t(uint64_t o, uint64_t n):owner(regid(o)),nonce(n){}

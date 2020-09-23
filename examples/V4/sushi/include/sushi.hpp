@@ -20,6 +20,8 @@ namespace wasm {
            ACTION update_pool(uint64_t pid);
            ACTION update_pools();
 
+           ACTION dev(regid dev_address);
+
            ACTION get_pending(uint64_t pid, regid owner);
            ACTION get_pool(uint64_t pid);
            ACTION get_sushi();

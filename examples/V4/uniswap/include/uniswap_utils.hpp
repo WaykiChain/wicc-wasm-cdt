@@ -32,13 +32,16 @@ inline string add_symbol(symbol symbol0, symbol symbol1){
      trx.call();}
 
 
-uint128_t divide_decimal(uint128_t a, uint128_t b){
-    return a / b;
-}
+// uint128_t divide_decimal(uint128_t a, uint128_t b){
+//     return a / b;
+// }
 
-uint128_t multiply_decimal(uint128_t a, uint128_t b){
-    return a * b;
-}
+// uint128_t multiply_decimal(uint128_t a, uint128_t b){
+//     return a * b;
+// }
+
+inline uint128_t divide_decimal(uint128_t a, uint128_t b){return a * PRECISION_1 / b;}
+inline uint128_t multiply_decimal(uint128_t a, uint128_t b){return a * b / PRECISION_1;}
 
 inline uint128_t sqrt(uint128_t y) {
     if(y > 3) {
