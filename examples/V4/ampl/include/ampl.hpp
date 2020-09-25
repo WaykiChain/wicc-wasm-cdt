@@ -12,12 +12,14 @@ namespace wasm {
        public:
            using contract::contract;
 
-           ACTION init(regid owner, symbol_code code, uint64_t base_cpi);
+           ACTION init(regid owner, symbol_code code, uint64_t base_cpi, regid cpi_oracle, regid market_oracle);
            ACTION rebase();   
            ACTION transfer(regid from, regid to, asset quantity, string memo );  
            ACTION total_supply();     
            ACTION balance_of(regid owner);  
            // ACTION get_ampl(); 
+           ACTION set_oracle(regid cpi, regid market);
+           ACTION set_lag(uint64_t rebase_lag);
 
 
        private:

@@ -66,6 +66,6 @@ struct TABLE_IN_CONTRACT account_t {
 
     WASMLIB_SERIALIZE( account_t, (id)(balance))    
 
-}
+};
 
 }

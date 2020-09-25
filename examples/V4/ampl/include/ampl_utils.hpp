@@ -1,15 +1,10 @@
 
 
-static constexpr uint64_t TOTAL_GONS = 10*10*10;
-
-
-
-
 static constexpr int128_t PRECISION_1       = 100000000; 
 static constexpr uint64_t PRECISION         = 8; 
 
 static constexpr uint64_t INITIAL_FRAGMENTS_SUPPLY = 50 * 1000000 * PRECISION_1;
-static constexpr uint64_t MAX_UINT64               = std::numeric_limits<uint64_t>::max; 
+static constexpr uint64_t MAX_UINT64               = std::numeric_limits<int64_t>::max(); 
 static constexpr uint64_t TOTAL_GONS               = MAX_UINT64 - MAX_UINT64 % INITIAL_FRAGMENTS_SUPPLY; 
 
 static constexpr uint64_t MAX_SUPPLY               = MAX_UINT64; 
@@ -25,7 +20,7 @@ WASM_DECLARE_EXCEPTION( contract_failed, 1000000, "contract failed" )
 
 
 #define GET_ORACLE_DATA(oracle) \
-    get_return_wasm<uint64_t>(wasm::transaction{oracle, name("get_data"), std::vector<permission>{{get_self(), name("wasmio_code")}}, std::tuple<regid, class symbol>(owner, sym)}.call())
+    get_return_wasm<uint64_t>(wasm::transaction{oracle, name("get_data"), std::vector<permission>{{get_self(), name("wasmio_code")}}, std::tuple<string>("data")}.call())
 
 #define BALANCE_OF(token, owner, sym) \
     get_return_wasm<asset>(wasm::transaction{token, name("balance_of"), std::vector<permission>{{get_self(), name("wasmio_code")}}, std::tuple<regid, class symbol>(owner, sym)}.call())
@@ -42,12 +37,11 @@ WASM_DECLARE_EXCEPTION( contract_failed, 1000000, "contract failed" )
     {wasm::transaction trx(token, name("transfer"), std::vector<permission>{{from, name("wasmio_code")}}, std::tuple<regid, regid, asset, string>(from, to, quantity, "transfer"));\
      trx.call();}
 
-
-uint128_t divide_decimal(uint128_t a, uint128_t b){
+uint128_t div_128(uint128_t a, uint128_t b){
     return a / b;
 }
 
-uint128_t multiply_decimal(uint128_t a, uint128_t b){
+uint128_t mul_128(uint128_t a, uint128_t b){
     return a * b;
 }
 

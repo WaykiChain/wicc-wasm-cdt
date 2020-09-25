@@ -1,4 +1,4 @@
-project(uniswap)
+project(ampl)
 cmake_minimum_required(VERSION 3.5)
 
 include(ExternalProject)
@@ -8,9 +8,9 @@ if(WASM_CDT_ROOT STREQUAL "" OR NOT WASM_CDT_ROOT)
 endif()
 
 ExternalProject_Add(
-   uniswap
+   ampl
    SOURCE_DIR ${CMAKE_SOURCE_DIR}/src
-   BINARY_DIR ${CMAKE_BINARY_DIR}/uniswap
+   BINARY_DIR ${CMAKE_BINARY_DIR}/ampl
    CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${WASM_CDT_ROOT}/lib/cmake/wasm.cdt/WasmWasmToolchain.cmake
    UPDATE_COMMAND ""
    PATCH_COMMAND ""
