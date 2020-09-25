@@ -37,28 +37,20 @@ WASM_DECLARE_EXCEPTION( contract_failed, 1000000, "contract failed" )
     {wasm::transaction trx(token, name("transfer"), std::vector<permission>{{from, name("wasmio_code")}}, std::tuple<regid, regid, asset, string>(from, to, quantity, "transfer"));\
      trx.call();}
 
-uint128_t div_128(uint128_t a, uint128_t b){
+uint128_t div_u128(uint128_t a, uint128_t b){
     return a / b;
 }
 
-uint128_t mul_128(uint128_t a, uint128_t b){
+uint128_t mul_u128(uint128_t a, uint128_t b){
     return a * b;
 }
 
-inline uint128_t sqrt(uint128_t y) {
-    if(y > 3) {
-       uint128_t z = y;
-       uint128_t x = y / 2 + 1;
-       while(x < z){
-          z = x;
-          x = (y / x + x) / 2;
-       }
-       return z;
-    } else if(y != 0) {
-       return 1;
-    }
+int128_t div_i128(int128_t a, int128_t b){
+    return a / b;
+}
 
-    return 0;
+int128_t mul_i128(int128_t a, int128_t b){
+    return a * b;
 }
 
 template<typename T>

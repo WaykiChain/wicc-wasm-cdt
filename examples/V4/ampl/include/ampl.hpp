@@ -27,6 +27,6 @@ namespace wasm {
            void _add_balance( regid owner, asset value, regid payer );
            uint64_t  _rebase(uint64_t epoch, int64_t supply_delta);
            uint64_t  _get_oracle_data(regid oracle);
-           uint64_t  _compute_supply_delta(uint64_t exchange_rate, int64_t cpi_rate);
+           int64_t   _compute_supply_delta(uint64_t exchange_rate, int64_t cpi_rate);
    };
 } /// namespace wasm
