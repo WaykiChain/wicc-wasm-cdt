@@ -30,8 +30,14 @@ total_supply
 balance_of
 ---
 
-<h1 class="contract"> get_ampl </h1>
+<h1 class="contract"> set_oracle </h1>
 
 ---
-get_ampl
+set_oracle
+---
+
+<h1 class="contract"> set_lag </h1>
+
+---
+set_lag
 ---
