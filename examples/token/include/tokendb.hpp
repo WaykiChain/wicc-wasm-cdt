@@ -11,14 +11,15 @@ namespace wasm{
             regid owner;
             asset balance;
 
-            uint64_t account_id;
-            uint64_t primary_key() const {return balance.symbol.code().raw(); }
-            uint64_t scope() const {return account_id;}
+            uint64_t pkValue;
+            uint64_t scopeValue;
+            uint64_t primary_key() const {return pkValue; }
+            uint64_t scope() const {return scopeValue;}
 
             account() {}
-            account(uint64_t i): account_id(i) {}
+            account(uint64_t i, uint64_t j): pkValue(i),scopeValue(j) {}
 
-            WASMLIB_SERIALIZE( account, (owner)(balance)(account_id))
+            WASMLIB_SERIALIZE( account, (owner)(balance)(pkValue)(scopeValue))
         };
         typedef wasm::table<"accounts"_n, account, uint64_t> accounts;
 
@@ -27,15 +28,17 @@ namespace wasm{
             asset supply;
             asset max_supply;
             regid issuer;
-            uint64_t scope_id;
 
-            uint64_t primary_key()const {return supply.symbol.code().raw(); }
-            uint64_t scope()const {return scope_id; }
+            uint64_t pkValue;
+            uint64_t scopeValue;
+
+            uint64_t primary_key()const {return pkValue; }
+            uint64_t scope()const {return scopeValue; }
 
             currency_stats() {}
-            currency_stats(uint64_t i): scope_id(i){}
+            currency_stats(uint64_t i, uint64_t j): pkValue(i), scopeValue(j){}
 
-            WASMLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer)(scope_id))
+            WASMLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer)(pkValue)(scopeValue))
         };
         typedef wasm::table< "stat"_n, currency_stats, uint64_t > stats;
 
