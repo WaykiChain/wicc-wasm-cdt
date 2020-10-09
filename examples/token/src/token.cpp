@@ -1,60 +1,58 @@
 #include <token.hpp>
-//#include <chrono>
 
-using namespace wasm;
-//using std::chrono::system_clock;
 
 ACTION token::create( regid  issuer,
                       asset  maximum_supply )
 {
-    require_auth( issuer );
-    auto maintainer = get_maintainer(_self);
-    check( issuer == maintainer, "issuer not contract maintainer");
+   require_auth( issuer );
+   auto maintainer = get_maintainer(_self);
+   check( issuer == maintainer, "issuer not contract maintainer");
 
-    auto sym = maximum_supply.symbol;
-    check( sym.is_valid(), "invalid symbol name" );
-    check( maximum_supply.is_valid(), "invalid supply" );
-    check( maximum_supply.amount > 0, "max-supply must be positive" );
+   auto sym = maximum_supply.symbol;
+   check( sym.is_valid(), "invalid symbol name" );
+   check( maximum_supply.is_valid(), "invalid supply" );
+   check( maximum_supply.amount > 0, "max-supply must be positive" );
 
-    currency_stats st;
-    stats statstable( _self, sym.code().raw() );
-    check( !statstable.get( st, sym.code().raw() ), "token with symbol already exists" );
+   currency_stats st(sym.code().raw());
+     
+   st.supply.symbol = sym;
+   st.max_supply = maximum_supply;
+   st.issuer = issuer;
 
-    statstable.emplace( _self, [&]( auto& s ) {
-       s.supply.symbol = maximum_supply.symbol;
-       s.max_supply    = maximum_supply;
-       s.issuer        = issuer;
-    });
+   check( !db::get(st), "token with symbol already exists" );
+   db::set(st);
+
 }
 
-
 ACTION token::issue( regid to, asset quantity, string memo )
-{
+{  
+   //print("issue .....");
     auto sym = quantity.symbol;
     check( sym.is_valid(), "invalid symbol name" );
     check( memo.size() <= 256, "memo has more than 256 bytes" );
 
-    currency_stats st;
-    stats statstable(_self, sym.code().raw()) ;
-    check( statstable.get( st, sym.code().raw() ), "token with symbol does not exist, create token before issue" );
-
+    currency_stats st(sym.code().raw());
+    st.supply.symbol = sym;
+    check( db::get( st ), "token with symbol does not exist, create token before issue" );
     require_auth( st.issuer );
     check( quantity.is_valid(), "invalid quantity" );
     check( quantity.amount > 0, "must issue positive quantity" );
     check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
     check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply");
-
-    statstable.modify( st, wasm::no_payer, [&]( auto& s ) {
-       s.supply += quantity;
-    });
-
+    st.supply += quantity;
+    db::set( st );
+   print("444\n");
     add_balance( st.issuer, quantity, st.issuer );
-
+   print("55555s\n");
     if( to != st.issuer ) {
+             print("6666\n",st.issuer);
       wasm::transaction inline_trx(get_self(), name("transfer"), std::vector<permission>{{st.issuer, name("wasmio.owner")}}, std::tuple(st.issuer, to, quantity, memo));
+      print("7777\n");
       inline_trx.send();
 
     }
+
+    print("88888");
 }
 
 ACTION token::retire( asset quantity, string memo )
@@ -63,18 +61,17 @@ ACTION token::retire( asset quantity, string memo )
     check( sym.is_valid(), "invalid symbol name" );
     check( memo.size() <= 256, "memo has more than 256 bytes" );
 
-    currency_stats st;
-    stats statstable(_self, sym.code().raw()) ;
-    check( statstable.get( st, sym.code().raw() ), "token with symbol does not exist" );
+    currency_stats st(sym.code().raw());
+    st.supply.symbol = sym;
+    check( db::get( st ), "token with symbol does not exist" );
 
     require_auth( st.issuer );
     check( quantity.is_valid(), "invalid quantity" );
     check( quantity.amount > 0, "must retire positive quantity" );
     check( quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
 
-    statstable.modify( st, wasm::no_payer, [&]( auto& s ) {
-       s.supply -= quantity;
-    });
+    st.supply -= quantity;
+    db::set( st );
 
     sub_balance( st.issuer, quantity );
 }
@@ -89,9 +86,9 @@ ACTION token::transfer( regid    from,
     check( is_account( to ), "to account does not exist");
     auto sym = quantity.symbol.code();
 
-    currency_stats st;
-    stats statstable( _self, sym.raw() );
-    statstable.get( st, sym.raw() );
+    currency_stats st(sym.raw());
+    st.supply.symbol = quantity.symbol;
+    db::get( st );
 
     notify_recipient( from );
     notify_recipient( to );
@@ -108,32 +105,33 @@ ACTION token::transfer( regid    from,
 }
 
 void token::sub_balance( regid owner, asset value ) {
-   accounts from_acnts( _self, owner.value );
+   account from(owner.value);
+   from.balance.symbol = value.symbol;
 
-   account from;
-   check( from_acnts.get( from, value.symbol.code().raw()), "no balance object found" );
+   check( db::get( from ), "no balance object found" );
    check( from.balance.amount >= value.amount, "overdrawn balance" );
 
-   from_acnts.modify( from, owner, [&]( auto& a ) {
-         a.balance -= value;
-      });
+   from.balance -= value;
+   print("sub_balance from.balance = \n",from.balance);
+   print("from.owner = \n", from.owner);
+   db::set( from );
 }
+
 
 void token::add_balance( regid owner, asset value, regid payer )
 {
-   accounts to_acnts( _self, owner.value );
-
-   account to;
-   if( !to_acnts.get( to, value.symbol.code().raw() ) ) {
-      to_acnts.emplace( payer, [&]( auto& a ){
-        a.owner   = owner;
-        a.balance = value;
-      });
+   account to(owner.value);
+   //print("add 11111 = ", value.symbol);
+   to.balance.symbol = value.symbol;
+   db::get(to);
+   if( !db::get( to )) {
+        to.owner   = owner;
+        to.balance = value;
    } else {
-      to_acnts.modify( to, wasm::no_payer, [&]( auto& a ) {
-        a.balance += value;
-      });
+        to.balance += value;
    }
+   print("to = ",to.balance, to.owner);
+   db::set(to);
 }
 
 ACTION token::open( regid owner, const symbol& symbol, regid payer )
@@ -141,32 +139,32 @@ ACTION token::open( regid owner, const symbol& symbol, regid payer )
    require_auth( payer );
 
    auto sym_code_raw = symbol.code().raw();
-   stats statstable( _self, sym_code_raw );
-
-   currency_stats st;
-   check( statstable.get( st, sym_code_raw), "symbol does not exist" );
+   currency_stats st(sym_code_raw);
+   st.supply.symbol = symbol;
+   check( db::get( st ), "symbol does not exist" );
    check( st.supply.symbol == symbol, "symbol precision mismatch" );
 
-   accounts acnts( _self, owner.value );
-   account account;
+   account account(owner.value);
+   account.balance.symbol = symbol;
 
-   if( ! acnts.get( account, sym_code_raw ) ) {
-      acnts.emplace( payer, [&]( auto& a ){
-        a.owner   = owner;
-        a.balance = asset{0, symbol};
-      });
+   if( !db::get( account ) ) {
+      account.owner = owner;
+      account.balance = asset{0, symbol};
+      db::set(account);
    }
 }
 
 ACTION token::close( regid owner, const symbol& symbol )
 {
    require_auth( owner );
-   accounts acnts( _self, owner.value );
 
-   account account;
-   check( acnts.get(account, symbol.code().raw() ), "Balance row already deleted or never existed. Action won't have any effect." );
+   account account(owner.value);
+   account.balance.symbol = symbol;
+
+   check( db::get(account), "Balance row already deleted or never existed. Action won't have any effect." );
    check( account.balance.amount == 0, "Cannot close because the balance is not zero." );
-   acnts.erase( account, wasm::no_payer );
+   db::del( account );
 }
+
 
 WASM_DISPATCH( token, (create)(issue)(retire)(transfer)(open)(close))
