@@ -26,7 +26,6 @@ ACTION token::create( regid  issuer,
 
 ACTION token::issue( regid to, asset quantity, string memo )
 {  
-   //print("issue .....");
     auto sym = quantity.symbol;
     check( sym.is_valid(), "invalid symbol name" );
     check( memo.size() <= 256, "memo has more than 256 bytes" );
@@ -41,18 +40,12 @@ ACTION token::issue( regid to, asset quantity, string memo )
     check( quantity.amount <= st.max_supply.amount - st.supply.amount, "quantity exceeds available supply");
     st.supply += quantity;
     db::set( st );
-   print("444\n");
     add_balance( st.issuer, quantity, st.issuer );
-   print("55555s\n");
     if( to != st.issuer ) {
-             print("6666\n",st.issuer);
       wasm::transaction inline_trx(get_self(), name("transfer"), std::vector<permission>{{st.issuer, name("wasmio.owner")}}, std::tuple(st.issuer, to, quantity, memo));
-      print("7777\n");
       inline_trx.send();
 
     }
-
-    print("88888");
 }
 
 ACTION token::retire( asset quantity, string memo )
@@ -112,8 +105,6 @@ void token::sub_balance( regid owner, asset value ) {
    check( from.balance.amount >= value.amount, "overdrawn balance" );
 
    from.balance -= value;
-   print("sub_balance from.balance = \n",from.balance);
-   print("from.owner = \n", from.owner);
    db::set( from );
 }
 
@@ -121,7 +112,6 @@ void token::sub_balance( regid owner, asset value ) {
 void token::add_balance( regid owner, asset value, regid payer )
 {
    account to(owner.value);
-   //print("add 11111 = ", value.symbol);
    to.balance.symbol = value.symbol;
    db::get(to);
    if( !db::get( to )) {
@@ -130,7 +120,7 @@ void token::add_balance( regid owner, asset value, regid payer )
    } else {
         to.balance += value;
    }
-   print("to = ",to.balance, to.owner);
+   
    db::set(to);
 }
 
