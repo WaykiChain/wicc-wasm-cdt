@@ -110,7 +110,6 @@ void token::sub_balance( regid owner, asset value ) {
 void token::add_balance( regid owner, asset value, regid payer )
 {
     account to(owner, value.symbol.code());
-    db::get(to);
 
     if( !db::get( to )) {
         to.owner   = owner;
@@ -133,11 +132,11 @@ ACTION token::open( regid owner, const symbol& symbol, regid payer )
 
     account account(owner, symbol.code());
 
-    if( !db::get( account ) ) {
-       account.owner = owner;
-       account.balance = asset{0, symbol};
-       db::set(account);
-    }
+    check(!db::get( account ), "account already exists");
+   
+    account.owner = owner;
+    account.balance = asset{0, symbol};
+    db::set(account);
 }
 
 ACTION token::close( regid owner, const symbol& symbol )
