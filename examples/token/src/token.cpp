@@ -80,7 +80,7 @@ ACTION token::transfer( regid    from,
     check( is_account( to ), "to account does not exist");
 
     currency_stats st(quantity.symbol.code());
-    db::get( st );
+    check(db::get( st ), "token with symbol does not exist");
 
     notify_recipient( from );
     notify_recipient( to );
@@ -99,8 +99,8 @@ ACTION token::transfer( regid    from,
 void token::sub_balance( const regid &owner, const asset &value ) {
     account from(owner, value.symbol);
 
-    check( db::get( from ), "no balance object found" );
-    check( from.balance.amount >= value.amount, "overdrawn balance" );
+    check( db::get( from ), "the account:" + to_string(owner.value) + " no found");
+    check( from.balance.amount >= value.amount, "overdrawn balance");
 
     from.balance -= value;
     db::set( from );
@@ -112,7 +112,6 @@ void token::add_balance( const regid &owner, const asset &value, const regid &pa
     account to(owner, value.symbol);
 
     if( !db::get( to )) {
-        to.owner   = owner;
         to.balance = value;
     } else {
         to.balance += value;
@@ -133,9 +132,6 @@ ACTION token::open( regid owner, const symbol& symbol, regid payer )
     account account(owner, symbol);
 
     check(!db::get( account ), "account already exists");
-   
-    account.owner = owner;
-    account.balance = asset{0, symbol};
     db::set(account);
 }
 
