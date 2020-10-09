@@ -13,12 +13,11 @@ ACTION token::create( regid  issuer,
     check( maximum_supply.is_valid(), "invalid supply" );
     check( maximum_supply.amount > 0, "max-supply must be positive" );
 
-    auto sym_code_raw = sym.code().raw();
-    currency_stats st(sym_code_raw, sym_code_raw);
+    currency_stats st(sym.code());
 
     check( !db::get(st), "token with symbol already exists" );
 
-    st.supply.symbol = sym;
+    st.supply = asset(0, sym);
     st.max_supply = maximum_supply;
     st.issuer = issuer;
 
@@ -32,8 +31,7 @@ ACTION token::issue( regid to, asset quantity, string memo )
     check( sym.is_valid(), "invalid symbol name" );
     check( memo.size() <= 256, "memo has more than 256 bytes" );
 
-    auto sym_code_raw = sym.code().raw();
-    currency_stats st(sym_code_raw, sym_code_raw);
+    currency_stats st(sym.code());
     check( db::get( st ), "token with symbol does not exist, create token before issue" );
    
     require_auth( st.issuer );
@@ -58,8 +56,7 @@ ACTION token::retire( asset quantity, string memo )
     check( sym.is_valid(), "invalid symbol name" );
     check( memo.size() <= 256, "memo has more than 256 bytes" );
     
-    auto sym_code_raw = sym.code().raw();
-    currency_stats st(sym_code_raw, sym_code_raw);
+    currency_stats st(sym.code());
     check( db::get( st ), "token with symbol does not exist" );
 
     require_auth( st.issuer );
@@ -81,9 +78,8 @@ ACTION token::transfer( regid    from,
     check( from != to, "cannot transfer to self" );
     require_auth( from );
     check( is_account( to ), "to account does not exist");
-    auto sym_code_raw = quantity.symbol.code().raw();
 
-    currency_stats st(sym_code_raw, sym_code_raw);
+    currency_stats st(quantity.symbol.code());
     db::get( st );
 
     notify_recipient( from );
@@ -101,7 +97,7 @@ ACTION token::transfer( regid    from,
 }
 
 void token::sub_balance( regid owner, asset value ) {
-    account from(value.symbol.code().raw(), owner.value);
+    account from(owner, value.symbol.code());
 
     check( db::get( from ), "no balance object found" );
     check( from.balance.amount >= value.amount, "overdrawn balance" );
@@ -113,7 +109,7 @@ void token::sub_balance( regid owner, asset value ) {
 
 void token::add_balance( regid owner, asset value, regid payer )
 {
-    account to(value.symbol.code().raw(), owner.value);
+    account to(owner, value.symbol.code());
     db::get(to);
 
     if( !db::get( to )) {
@@ -130,13 +126,12 @@ ACTION token::open( regid owner, const symbol& symbol, regid payer )
 {
     require_auth( payer );
 
-    auto sym_code_raw = symbol.code().raw();
-    currency_stats st(sym_code_raw, sym_code_raw);
+    currency_stats st(symbol.code());
 
     check( db::get( st ), "symbol does not exist" );
     check( st.supply.symbol == symbol, "symbol precision mismatch" );
 
-    account account(sym_code_raw, owner.value);
+    account account(owner, symbol.code());
 
     if( !db::get( account ) ) {
        account.owner = owner;
@@ -149,7 +144,7 @@ ACTION token::close( regid owner, const symbol& symbol )
 {
     require_auth( owner );
 
-    account account(symbol.code().raw(), owner.value);
+    account account(owner, symbol.code());
 
     check( db::get(account), "Balance row already deleted or never existed. Action won't have any effect." );
     check( account.balance.amount == 0, "Cannot close because the balance is not zero." );

@@ -10,35 +10,32 @@ namespace wasm{
         struct  TABLE_IN_CONTRACT account {
             regid owner;
             asset balance;
+            symbol_code symb;
 
-            uint64_t pkValue;
-            uint64_t scopeValue;
-            uint64_t primary_key() const {return pkValue; }
-            uint64_t scope() const {return scopeValue;}
+            uint64_t primary_key() const {return symb.raw(); }
+            uint64_t scope() const {return owner.value; }
 
             account() {}
-            account(uint64_t i, uint64_t j): pkValue(i),scopeValue(j) {}
+            account(regid owner_in, symbol_code symb_in): owner(owner_in),symb(symb_in) {}
 
-            WASMLIB_SERIALIZE( account, (owner)(balance)(pkValue)(scopeValue))
+            WASMLIB_SERIALIZE( account, (owner)(balance)(symb))
         };
         typedef wasm::table<"accounts"_n, account, uint64_t> accounts;
-
+    
 
         struct TABLE_IN_CONTRACT currency_stats {
+            symbol_code symb;
             asset supply;
             asset max_supply;
             regid issuer;
 
-            uint64_t pkValue;
-            uint64_t scopeValue;
-
-            uint64_t primary_key()const {return pkValue; }
-            uint64_t scope()const {return scopeValue; }
+            uint64_t primary_key()const {return symb.raw(); }
+            uint64_t scope()const {return symb.raw(); }
 
             currency_stats() {}
-            currency_stats(uint64_t i, uint64_t j): pkValue(i), scopeValue(j){}
+            currency_stats(symbol_code symb_in): symb(symb_in) {}
 
-            WASMLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer)(pkValue)(scopeValue))
+            WASMLIB_SERIALIZE( currency_stats, (symb)(supply)(max_supply)(issuer))
         };
         typedef wasm::table< "stat"_n, currency_stats, uint64_t > stats;
 
