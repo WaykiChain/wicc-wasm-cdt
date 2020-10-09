@@ -99,7 +99,7 @@ ACTION token::transfer( regid    from,
 void token::sub_balance( const regid &owner, const asset &value ) {
     account from(owner, value.symbol);
 
-    check( db::get( from ), "the account:" + to_string(owner.value) + " no found");
+    check( db::get( from ), "the balance of account:" + to_string(owner.value) + " does not exist");
     check( from.balance.amount >= value.amount, "overdrawn balance");
 
     from.balance -= value;
