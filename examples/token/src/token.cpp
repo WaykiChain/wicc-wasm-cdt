@@ -96,7 +96,7 @@ ACTION token::transfer( regid    from,
     add_balance( to, quantity, payer );
 }
 
-void token::sub_balance( regid owner, asset value ) {
+void token::sub_balance( const regid &owner, const asset &value ) {
     account from(owner, value.symbol);
 
     check( db::get( from ), "no balance object found" );
@@ -107,7 +107,7 @@ void token::sub_balance( regid owner, asset value ) {
 }
 
 
-void token::add_balance( regid owner, asset value, regid payer )
+void token::add_balance( const regid &owner, const asset &value, const regid &payer )
 {
     account to(owner, value.symbol);
 

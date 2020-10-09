@@ -24,7 +24,7 @@ namespace wasm {
          ACTION close(regid owner, const symbol& symbol );
          
       private:
-         void sub_balance(regid owner, asset value);
-         void add_balance(regid owner, asset value, regid ram_player);
+         void sub_balance(const regid &owner, const asset &value);
+         void add_balance(const regid &owner, const asset &value, const regid &ram_player);
    };
 } /// namespace wasm
