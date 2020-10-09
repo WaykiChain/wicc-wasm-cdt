@@ -97,7 +97,7 @@ ACTION token::transfer( regid    from,
 }
 
 void token::sub_balance( regid owner, asset value ) {
-    account from(owner, value.symbol.code());
+    account from(owner, value.symbol);
 
     check( db::get( from ), "no balance object found" );
     check( from.balance.amount >= value.amount, "overdrawn balance" );
@@ -109,7 +109,7 @@ void token::sub_balance( regid owner, asset value ) {
 
 void token::add_balance( regid owner, asset value, regid payer )
 {
-    account to(owner, value.symbol.code());
+    account to(owner, value.symbol);
 
     if( !db::get( to )) {
         to.owner   = owner;
@@ -130,7 +130,7 @@ ACTION token::open( regid owner, const symbol& symbol, regid payer )
     check( db::get( st ), "symbol does not exist" );
     check( st.supply.symbol == symbol, "symbol precision mismatch" );
 
-    account account(owner, symbol.code());
+    account account(owner, symbol);
 
     check(!db::get( account ), "account already exists");
    
@@ -143,7 +143,7 @@ ACTION token::close( regid owner, const symbol& symbol )
 {
     require_auth( owner );
 
-    account account(owner, symbol.code());
+    account account(owner, symbol);
 
     check( db::get(account), "Balance row already deleted or never existed. Action won't have any effect." );
     check( account.balance.amount == 0, "Cannot close because the balance is not zero." );

@@ -10,15 +10,14 @@ namespace wasm{
         struct  TABLE_IN_CONTRACT account {
             regid owner;
             asset balance;
-            symbol_code symb;
 
-            uint64_t primary_key() const {return symb.raw(); }
+            uint64_t primary_key() const {return balance.symbol.code().raw(); }
             uint64_t scope() const {return owner.value; }
 
             account() {}
-            account(regid owner_in, symbol_code symb_in): owner(owner_in),symb(symb_in) {}
+            account(const regid &owner_in, symbol symb_in): owner(owner_in), balance(asset(0, symb_in)) {}
 
-            WASMLIB_SERIALIZE( account, (owner)(balance)(symb))
+            WASMLIB_SERIALIZE( account, (owner)(balance))
         };
         typedef wasm::table<"accounts"_n, account, uint64_t> accounts;
     
